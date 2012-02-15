@@ -36,6 +36,14 @@ typedef struct mh_axis {
 #define MH_AXIS_BIN_CENTER_VAR(a, ibin) ( 0.5*((a)->bins[ibin] + (a)->bins[(ibin)+1]) )
 #define MH_AXIS_BIN_CENTER(a, ibin) (MH_AXIS_ISFIXBIN(a) ? MH_AXIS_BIN_CENTER_FIX((a), (ibin)) : MH_AXIS_BIN_CENTER_VAR((a), (ibin)))
 
+/* for use outside the mh_axis_* functions */
+#define MH_AXIS_MIN(a) ((a)->min)
+#define MH_AXIS_MAX(a) ((a)->max)
+#define MH_AXIS_NBINS(a) ((a)->nbins)
+#define MH_AXIS_WIDTH(a) ((a)->width)
+#define MH_AXIS_BINSIZE(a) ((a)->binsize)
+
+
 /*
  * Allocates a new axis struct in the provided pointer.
  * Needs the number of bins in the axis and a boolean indicating
@@ -47,6 +55,8 @@ bool mh_axis_create(mh_axis_t **axis, bool zero, unsigned int nbins, bool varbin
 void mh_axis_free(mh_axis_t *axis);
 /* Clones an axis */
 bool mh_axis_clone(mh_axis_t *axis_proto, mh_axis_t **axis_out);
+/* Init axis properties. nbins and possibly the bins array were initialized by mh_axis_create */
+void mh_axis_init(mh_axis_t *axis, double min, double max);
 
 /* Returns the bin number where x would be filled into the given
  * axis abstracts away whether to use constant or non-constant

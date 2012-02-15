@@ -48,6 +48,17 @@ mh_axis_clone(mh_axis_t *axis_proto, mh_axis_t **axis_out)
 
 
 void
+mh_axis_init(mh_axis_t *axis, double min, double max)
+{
+  axis->min = min;
+  axis->max = max;
+  axis->width = max-min;
+  if (MH_AXIS_ISFIXBIN(axis))
+    axis->binsize = width / (double)MH_AXIS_NBINS(axis);
+}
+
+
+void
 mh_axis_free(mh_axis_t *axis)
 {
   if (MH_AXIS_ISFIXBIN(axis))
@@ -73,7 +84,7 @@ mh_axis_find_bin_var(mh_axis_t *axis, double x)
   unsigned int mid;
   double mid_val;
   unsigned int imin = 0;
-  unsigned int imax = axis->nbins;
+  unsigned int imax = MH_AXIS_NBINS(axis);
   double *bins = axis->bins;
 
   while (1) {
