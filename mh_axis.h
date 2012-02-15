@@ -15,7 +15,7 @@ typedef struct mh_axis {
 } mh_axis_t;
 
 /* Returns whether or not a given axis struct has variable bin sizes */
-#define MH_AXIS_ISFIXBIN(a) (((a)->bins == NULL)
+#define MH_AXIS_ISFIXBIN(a) ((a)->bins == NULL)
 
 /* Various accessors for binsizes, bin boundaries, and bin centers.
  * Separate implementations for variable and fixed bin size axis for
@@ -41,8 +41,6 @@ typedef struct mh_axis {
 #define MH_AXIS_MAX(a) ((a)->max)
 #define MH_AXIS_NBINS(a) ((a)->nbins)
 #define MH_AXIS_WIDTH(a) ((a)->width)
-#define MH_AXIS_BINSIZE(a) ((a)->binsize)
-
 
 /*
  * Allocates a new axis struct in the provided pointer.
@@ -50,11 +48,11 @@ typedef struct mh_axis {
  * whether the axis has variable-size bins for pre-allocation.
  * Returns whether all allocations succeeded.
  */
-bool mh_axis_create(mh_axis_t **axis, bool zero, unsigned int nbins, bool varbins);
+int mh_axis_create(mh_axis_t **axis, unsigned int nbins, unsigned short have_varbins);
 /* Deallocates an axis struct */
 void mh_axis_free(mh_axis_t *axis);
 /* Clones an axis */
-bool mh_axis_clone(mh_axis_t *axis_proto, mh_axis_t **axis_out);
+int mh_axis_clone(mh_axis_t *axis_proto, mh_axis_t **axis_out);
 /* Init axis properties. nbins and possibly the bins array were initialized by mh_axis_create */
 void mh_axis_init(mh_axis_t *axis, double min, double max);
 

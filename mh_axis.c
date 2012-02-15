@@ -1,15 +1,18 @@
 #include "mh_axis.h"
 
-bool
-mh_axis_create(mh_axis_t **axis, unsigned int nbins, bool varbins)
+#include <stdlib.h>
+#include <string.h>
+
+int
+mh_axis_create(mh_axis_t **axis, unsigned int nbins, unsigned short have_varbins)
 {
   *axis = (mh_axis_t *)malloc(sizeof(mh_axis_t));
   if (axis == NULL)
     return 0;
-  *axis->nbins = nbins;
-  if (varbins) {
-    *axis->bins = (double *)malloc(sizeof(double) * nbins);
-    if (*axis->bins == NULL) {
+  (*axis)->nbins = nbins;
+  if (have_varbins != 0) {
+    (*axis)->bins = (double *)malloc(sizeof(double) * nbins);
+    if ((*axis)->bins == NULL) {
       free(*axis);
       return 0;
     }
@@ -18,30 +21,30 @@ mh_axis_create(mh_axis_t **axis, unsigned int nbins, bool varbins)
 }
 
 
-bool
+int
 mh_axis_clone(mh_axis_t *axis_proto, mh_axis_t **axis_out)
 {
   *axis_out = (mh_axis_t *)malloc(sizeof(mh_axis_t));
   if (axis_out == NULL)
     return 0;
 
-  *axis_out->nbins = axis_proto->nbins;
+  (*axis_out)->nbins = axis_proto->nbins;
   if (!MH_AXIS_ISFIXBIN(axis_proto)) {
-    *axis_out->bins = (double *)malloc(sizeof(double) * axis_proto->nbins);
-    if (*axis_out->bins == NULL) {
+    (*axis_out)->bins = (double *)malloc(sizeof(double) * axis_proto->nbins);
+    if ((*axis_out)->bins == NULL) {
       free(*axis_out);
       return 0;
     }
-    memcpy(*axis_out->bins, axis_proto->bins, sizeof(double) * axis_proto->nbins);
+    memcpy((*axis_out)->bins, axis_proto->bins, sizeof(double) * axis_proto->nbins);
   }
   else {
-    *axis_out->bins = NULL;
+    (*axis_out)->bins = NULL;
   }
 
-  *axis_out->binsize = axis_proto->binsize;
-  *axis_out->width = axis_proto->width;
-  *axis_out->min = axis_proto->min;
-  *axis_out->max = axis_proto->max;
+  (*axis_out)->binsize = axis_proto->binsize;
+  (*axis_out)->width = axis_proto->width;
+  (*axis_out)->min = axis_proto->min;
+  (*axis_out)->max = axis_proto->max;
 
   return 1;
 }
@@ -54,7 +57,7 @@ mh_axis_init(mh_axis_t *axis, double min, double max)
   axis->max = max;
   axis->width = max-min;
   if (MH_AXIS_ISFIXBIN(axis))
-    axis->binsize = width / (double)MH_AXIS_NBINS(axis);
+    axis->binsize = axis->width / (double)MH_AXIS_NBINS(axis);
 }
 
 
@@ -71,9 +74,9 @@ unsigned int
 mh_axis_find_bin(mh_axis_t *axis, double x)
 {
   if (MH_AXIS_ISFIXBIN(axis))
-    return( (x-self->min) / self->binsize );
+    return( (x-MH_AXIS_MIN(axis)) / MH_AXIS_BINSIZE_FIX(axis) );
   else
-    return find_bin_nonconstant(x, self->nbins, self->bins);
+    return mh_axis_find_bin_var(axis, x);
 }
 
 
