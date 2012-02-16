@@ -48,22 +48,27 @@ typedef struct mh_axis {
  * whether the axis has variable-size bins for pre-allocation.
  * Returns whether all allocations succeeded.
  */
-int mh_axis_create(mh_axis_t **axis, unsigned int nbins, unsigned short have_varbins);
+mh_axis_t *mh_axis_create(unsigned int nbins, unsigned short have_varbins);
 /* Deallocates an axis struct */
 void mh_axis_free(mh_axis_t *axis);
 /* Clones an axis */
-int mh_axis_clone(mh_axis_t *axis_proto, mh_axis_t **axis_out);
+mh_axis_t *mh_axis_clone(mh_axis_t *axis_proto);
 /* Init axis properties. nbins and possibly the bins array were initialized by mh_axis_create */
 void mh_axis_init(mh_axis_t *axis, double min, double max);
 
 /* Returns the bin number where x would be filled into the given
  * axis abstracts away whether to use constant or non-constant
- * bin sizes. */
+ * bin sizes.
+ * Bin numbers are 1-based because the first bin is underflow,
+ * the bin number nbins+1 is overflow. */
 unsigned int mh_axis_find_bin(mh_axis_t *axis, double x);
 
 /* optimized version for fixed-bin-only case */
 #define MH_AXIS_FIND_BIN_FIX(a, x) ( ((x)-(a)->min) / MH_AXIS_BINSIZE_FIX(a) )
 /* variable bin size bin finder, O(log N) */
 unsigned int mh_axis_find_bin_var(mh_axis_t *axis, double x);
+
+#define MH_AXIS_OPT_FIXEDBINS 0
+#define MH_AXIS_OPT_VARBINS 1
 
 #endif

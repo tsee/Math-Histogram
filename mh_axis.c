@@ -3,50 +3,53 @@
 #include <stdlib.h>
 #include <string.h>
 
-int
-mh_axis_create(mh_axis_t **axis, unsigned int nbins, unsigned short have_varbins)
+mh_axis_t *
+mh_axis_create(unsigned int nbins, unsigned short have_varbins)
 {
-  *axis = (mh_axis_t *)malloc(sizeof(mh_axis_t));
+  mh_axis_t *axis;
+  axis = (mh_axis_t *)malloc(sizeof(mh_axis_t));
   if (axis == NULL)
-    return 0;
-  (*axis)->nbins = nbins;
-  if (have_varbins != 0) {
-    (*axis)->bins = (double *)malloc(sizeof(double) * nbins);
-    if ((*axis)->bins == NULL) {
-      free(*axis);
-      return 0;
+    return NULL;
+  axis->nbins = nbins;
+
+  if (have_varbins != MH_AXIS_OPT_FIXEDBINS) {
+    axis->bins = (double *)malloc(sizeof(double) * nbins);
+    if (axis->bins == NULL) {
+      free(axis);
+      return NULL;
     }
   }
-  return 1;
+
+  return axis;
 }
 
 
-int
-mh_axis_clone(mh_axis_t *axis_proto, mh_axis_t **axis_out)
+mh_axis_t *
+mh_axis_clone(mh_axis_t *axis_proto)
 {
-  *axis_out = (mh_axis_t *)malloc(sizeof(mh_axis_t));
+  mh_axis_t *axis_out = (mh_axis_t *)malloc(sizeof(mh_axis_t));
   if (axis_out == NULL)
-    return 0;
+    return NULL;
 
-  (*axis_out)->nbins = axis_proto->nbins;
+  axis_out->nbins = axis_proto->nbins;
   if (!MH_AXIS_ISFIXBIN(axis_proto)) {
-    (*axis_out)->bins = (double *)malloc(sizeof(double) * axis_proto->nbins);
-    if ((*axis_out)->bins == NULL) {
-      free(*axis_out);
-      return 0;
+    axis_out->bins = (double *)malloc(sizeof(double) * axis_proto->nbins);
+    if (axis_out->bins == NULL) {
+      free(axis_out);
+      return NULL;
     }
-    memcpy((*axis_out)->bins, axis_proto->bins, sizeof(double) * axis_proto->nbins);
+    memcpy(axis_out->bins, axis_proto->bins, sizeof(double) * axis_proto->nbins);
   }
   else {
-    (*axis_out)->bins = NULL;
+    axis_out->bins = NULL;
   }
 
-  (*axis_out)->binsize = axis_proto->binsize;
-  (*axis_out)->width = axis_proto->width;
-  (*axis_out)->min = axis_proto->min;
-  (*axis_out)->max = axis_proto->max;
+  axis_out->binsize = axis_proto->binsize;
+  axis_out->width = axis_proto->width;
+  axis_out->min = axis_proto->min;
+  axis_out->max = axis_proto->max;
 
-  return 1;
+  return axis_out;
 }
 
 
@@ -73,8 +76,14 @@ mh_axis_free(mh_axis_t *axis)
 unsigned int
 mh_axis_find_bin(mh_axis_t *axis, double x)
 {
-  if (MH_AXIS_ISFIXBIN(axis))
-    return( (x-MH_AXIS_MIN(axis)) / MH_AXIS_BINSIZE_FIX(axis) );
+  if (MH_AXIS_ISFIXBIN(axis)) {
+    double min = MH_AXIS_MIN(axis);
+    if (x < min)
+      return 0;
+    else if (x > MH_AXIS_MAX(axis))
+      return MH_AXIS_NBINS(axis)+1;
+    return( (unsigned int) ((x-MH_AXIS_MIN(axis)) / MH_AXIS_BINSIZE_FIX(axis)) );
+  }
   else
     return mh_axis_find_bin_var(axis, x);
 }
@@ -89,6 +98,11 @@ mh_axis_find_bin_var(mh_axis_t *axis, double x)
   unsigned int imin = 0;
   unsigned int imax = MH_AXIS_NBINS(axis);
   double *bins = axis->bins;
+
+  if (x < MH_AXIS_MIN(axis))
+    return 0;
+  else if (x > MH_AXIS_MAX(axis))
+    return imax+1;
 
   while (1) {
     mid = imin + (imax-imin)/2;
