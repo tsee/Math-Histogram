@@ -17,7 +17,7 @@ WriteMakefile(
     NAME              => $name,
     VERSION_FROM      => 'lib/Math/Histogram.pm', # finds $VERSION
     PREREQ_PM         => {
-      'ExtUtils::ParseXS' => '3.11',
+      'ExtUtils::ParseXS' => '2.21',
       'Test::More' => '0.88',
     },
     ($] >= 5.005 ?
