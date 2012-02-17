@@ -7,7 +7,7 @@ use ExtUtils::MakeMaker;
 my $name = 'Math::Histogram';
 my $define = '';
 if (grep {/--debug/} @ARGV) {
-  $define = '-Wall -Wextra -O0 -g';
+  $define = '-Wall -Wextra -O0 -ggdb -pedantic -Wno-long-long -finstrument-functions';
 }
 else {
   $define = '-O2';
