@@ -63,12 +63,14 @@ mh_hist_flat_bin_number(mh_histogram_t *hist, unsigned int dim_bins[])
 
     /* Suppose we have dim_bins = {5, 3, 4};
      * Then the index into the 1D data array is
-     *   4 * ndims^2 + 3 * ndims^1 + 5 * ndims^0
+     *   4 * (dim_bins[2]+2)^2 + 3 * (dim_bins[1]+2)^1 + 5 * (dim_bins[0]+2)^0
      * which can be done more efficiently as
-     *   ((4)*nbins + 3)*nbins + 5;
+     *   ((4)*dim_bins[2] + 3)*dim_bins[1] + 5;
      * parenthesis included to hint at the execution order.
      */
+    /* FIXME THIS IS BROKEN? */
     bin_index = dim_bins[ndim-1];
+    /* printf("%u %u\n", bin_index, ndim); */
     for (i = (int)ndim-2; i >= 0; --i)
       bin_index = bin_index*(MH_AXIS_NBINS(axises[i])+2) + dim_bins[i];
   
@@ -87,7 +89,7 @@ mh_hist_total_nbins(mh_histogram_t *hist)
 
   for (i = 0; i < ndim; ++i)
     bins *= MH_AXIS_NBINS(axises[i])+2;
-
+  /* printf("Total number of bins: %u\n", bins); */
   return bins;
 }
 
