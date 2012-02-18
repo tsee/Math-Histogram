@@ -2,15 +2,30 @@ use 5.008001;
 use strict;
 use warnings;
 use ExtUtils::MakeMaker;
+use Config qw(%Config);
+
 # See lib/ExtUtils/MakeMaker.pm for details of how to influence
 # the contents of the Makefile that is written.
 my $name = 'Math::Histogram';
 my $define = '';
-if (grep {/--debug/} @ARGV) {
+
+my $DEBUG = grep {/--debug/} @ARGV;
+if ($DEBUG) {
   $define = '-Wall -Wextra -O0 -ggdb -pedantic -Wno-long-long -finstrument-functions';
 }
 else {
   $define = '-O2';
+}
+
+my @test_cfiles;
+my @test_exefiles;
+if ($DEBUG) {
+  my $ctest_dir = 'ctest';
+  @test_cfiles = glob("$ctest_dir/*.c");
+  foreach my $file (@test_cfiles) {
+    (my $exefile = $file) =~ s/\.c$/$Config{exe_ext}/;
+    push @test_exefiles, $exefile;
+  }
 }
 
 WriteMakefile(
@@ -27,5 +42,26 @@ WriteMakefile(
     DEFINE            => $define,
     INC               => '-I.',
     OBJECT            => '$(O_FILES)', # link all the C files too
+    clean => {FILES => "@test_exefiles"}
 );
+
+
+sub MY::postamble {
+  if ($DEBUG) {
+    my $make_frag = <<MAKE_FRAG;
+test :: ctests
+
+ctests:
+MAKE_FRAG
+    foreach my $i (0..$#test_cfiles) {
+      my $file = $test_cfiles[$i];
+      my $exefile = $test_exefiles[$i];
+      $make_frag .= "\t\$(CC) $define -I. $file mh*.o -o $exefile";
+    }
+    return $make_frag;
+  }
+  else {
+    return "\n";
+  }
+}
 
