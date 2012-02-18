@@ -26,6 +26,8 @@ if ($DEBUG) {
     (my $exefile = $file) =~ s/\.c$/$Config{exe_ext}/;
     push @test_exefiles, $exefile;
   }
+  print "Debug mode. Will build C tests:\n  ",
+    join("\n  ", @test_exefiles), "\n";
 }
 
 WriteMakefile(
@@ -33,7 +35,9 @@ WriteMakefile(
     VERSION_FROM      => 'lib/Math/Histogram.pm', # finds $VERSION
     PREREQ_PM         => {
       'ExtUtils::ParseXS' => '2.21',
-      'Test::More' => '0.88',
+      'Test::More' => '0.94',
+      'File::Spec' => '0',
+      'Capture::Tiny' => '0',
     },
     ($] >= 5.005 ?
       (ABSTRACT_FROM  => 'lib/Math/Histogram.pm', # retrieve abstract from module
@@ -49,7 +53,7 @@ WriteMakefile(
 sub MY::postamble {
   if ($DEBUG) {
     my $make_frag = <<MAKE_FRAG;
-test :: ctests
+linkext :: ctests
 
 ctests:
 MAKE_FRAG
