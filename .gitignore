@@ -13,7 +13,7 @@ META.yml
 META.json
 MYMETA.yml
 MYMETA.json
-ctest/200_histogram
-ctest/100_axis
+ctest/200histogram
+ctest/100axis
 USE_*
 old/
