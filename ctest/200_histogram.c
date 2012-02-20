@@ -3,25 +3,13 @@
 #include <mh_histogram.h>
 #include <mh_axis.h>
 
-static unsigned int ntests = 0;
-
-void
-ok(int i)
-{
-  printf("%sok %u\n", (i ? "" : "not "), ++ntests);
-}
-
-void
-ok_m(int i, char *msg)
-{
-  printf("%sok %u - %s\n", (i ? "" : "not "), ++ntests, msg);
-}
+#include "mytap.h"
 
 mh_histogram_t *
 make_cubything_hist(unsigned int ndim)
 {
   unsigned int i;
-  mh_axis_t *axises[ndim];
+  mh_axis_t **axises = malloc(ndim * sizeof(mh_axis_t *));
   unsigned int nbins = 2;
   for (i = 0; i < ndim; ++i) {
     axises[i] = mh_axis_create(nbins+i, MH_AXIS_OPT_FIXEDBINS);
@@ -29,6 +17,7 @@ make_cubything_hist(unsigned int ndim)
   }
 
   mh_histogram_t *h = mh_hist_create(ndim, axises);
+  free(axises);
   return h;
 }
 
