@@ -5,6 +5,7 @@ BEGIN {
 }
 use Math::Histogram::Test;
 
-run_ctest('100_axis');
+run_ctest('100axis')
+  or Test::More->import(skip_all => "C executable not found");
 
 
