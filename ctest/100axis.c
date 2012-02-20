@@ -4,6 +4,11 @@
 
 #include "mytap.h"
 
+/* because the one included in main() below is using fixed-width bins
+ * in a variable-bin axis only, we need to test differing var-bins
+ * separately. */
+void real_varbins_test();
+
 int
 main (int argc, char **argv)
 {
@@ -19,9 +24,9 @@ main (int argc, char **argv)
   ok(1);
 
   naxises = 4;
-  nbins = 10;
-  min = 0.3;
-  max = 0.7;
+  nbins = 13;
+  min = -0.3;
+  max = 0.85;
   binsize = (max-min) / (double)nbins;
 
   /* we'll run the same set if initial tests on an axis and its clone */
@@ -111,8 +116,37 @@ main (int argc, char **argv)
     mh_axis_free(axis);
   } /* end foreach axis */
 
+  real_varbins_test();
+
   done_testing();
   return 0;
 }
 
+void
+real_varbins_test()
+{
+  mh_axis_t *axis;
+  double min, max, width;
+  unsigned int nbins, i, iaxis, bin;
+  char buf[2048];
+
+  double bins[] = {-.1, 0., 1.e-5, 1., 2., 2.1, 100., 113., 115., 120., 1000., 1001., 1002.2, 1002.3};
+
+  nbins = 13;
+  min = bins[0];
+  max = bins[nbins];
+  width = max-min;
+
+  /* we'll run the same set if initial tests on an axis and its clone */
+  axis = mh_axis_create(nbins, MH_AXIS_OPT_VARBINS);
+  mh_axis_init(axis, min, max);
+  for (i = 0; i <= nbins; ++i) {
+    axis->bins[i] = bins[i];
+    printf("# %u => %f\n", i, axis->bins[i]);
+  }
+  is_double_m(1e-9, axis->bins[nbins], max, "bin arithmetic leads to expected range");
+  is_double_m(1e-9, axis->bins[0], min, "bin arithmetic leads to expected range");
+
+  mh_axis_free(axis);
+}
 
