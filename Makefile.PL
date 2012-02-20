@@ -60,7 +60,7 @@ MAKE_FRAG
     foreach my $i (0..$#test_cfiles) {
       my $file = $test_cfiles[$i];
       my $exefile = $test_exefiles[$i];
-      $make_frag .= "\t\$(CC) $define -I. $file mh*.o -o $exefile";
+      $make_frag .= "\t\$(CC) $define -I. $file mh*.o -o $exefile\n";
     }
     return $make_frag;
   }
