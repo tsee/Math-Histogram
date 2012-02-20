@@ -12,10 +12,11 @@ my $define = '';
 
 GetOptions(
   'debug:i'  => \(my $DEBUG),
-  'gdb'      => \(my $USE_GDB),
+  #'gdb'      => \(my $USE_GDB),
   'valgrind' => \(my $USE_VALGRIND),
 );
 
+my $USE_GDB; # WARNING! DOESN'T WORK INTERACTIVELY
 if ($USE_VALGRIND and $USE_GDB) {
   die "Can only use valgrind or gdb, not both at the same time.";
 }
@@ -68,7 +69,7 @@ WriteMakefile(
     DEFINE            => $define,
     INC               => '-I.',
     OBJECT            => '$(O_FILES)', # link all the C files too
-    clean => {FILES => "@test_exefiles"}
+    clean => {FILES => "@test_exefiles USE_VALGRIND USE_GDB"}
 );
 
 
