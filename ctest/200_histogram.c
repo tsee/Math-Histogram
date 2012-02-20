@@ -68,7 +68,7 @@ main (int argc, char **argv)
   mh_hist_free(h2);
   mh_hist_free(h3);
 
-  printf("1..%u\n", ntests);
+  done_testing();
   return 0;
 }
 
