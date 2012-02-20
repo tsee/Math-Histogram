@@ -106,28 +106,31 @@ mh_axis_find_bin_var(mh_axis_t *axis, double x)
   unsigned int imin = 0;
   unsigned int imax = MH_AXIS_NBINS(axis);
   double *bins = axis->bins;
+  x += DBL_EPSILON; /* FIXME */
 
   if (x < MH_AXIS_MIN(axis))
     return 0;
-  else if (x > MH_AXIS_MAX(axis))
+  else if (x >= MH_AXIS_MAX(axis))
     return imax+1;
 
+  /* This algorithm is based on 0-based bin indices, we switch to 1-based
+   * only in the very return statements! */
   while (1) {
     mid = imin + (imax-imin)/2;
     mid_val = bins[mid];
     if (mid_val == x)
-      return mid;
+      return mid+1;
     else if (mid_val > x) {
       if (mid == 0)
-        return 0;
+        return 1;
       imax = mid-1;
       if (imin > imax)
-        return mid-1;
+        return mid;
     }
     else {
       imin = mid+1;
       if (imin > imax)
-        return imin-1;
+        return imin;
     }
   }
 }

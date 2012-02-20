@@ -95,15 +95,15 @@ main (int argc, char **argv)
         is_double_m(1e-9, MH_AXIS_BIN_UPPER_VAR(axis, i), binupper, buf);
       }
 
-      /* printf("# lower => %u i=%u\n", mh_axis_find_bin(axis, binlower), i); */
+      /* printf("# lower=%f => %u i=%u\n", binlower, mh_axis_find_bin(axis, binlower), i); */
       sprintf(buf, "axis %u, finding bin no for bin lower edge (%u)", iaxis, i);
       is_int_m(mh_axis_find_bin(axis, binlower), i, buf);
 
-      /* printf("# center => %u i=%u\n", mh_axis_find_bin(axis, bincenter), i); */
+      /* printf("# center=%f => %u i=%u\n", bincenter, mh_axis_find_bin(axis, bincenter), i); */
       sprintf(buf, "axis %u, finding bin no for bin center (%u)", iaxis, i);
       is_int_m(mh_axis_find_bin(axis, bincenter), i, buf);
 
-      /* printf("# upper => %u i=%u\n", mh_axis_find_bin(axis, binupper), i); */
+      /* printf("# upper=%f => %u i=%u\n", binupper, mh_axis_find_bin(axis, binupper), i); */
       sprintf(buf, "axis %u, finding bin no for upper edge (%u)", iaxis, i);
       is_int_m(mh_axis_find_bin(axis, binupper), i+1, buf);
     }
