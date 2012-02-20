@@ -11,6 +11,14 @@ void increment_ntests() {
   ntests++;
 }
 
+void done_testing() {
+  printf("1..%u\n", ntests);
+}
+
+void plan(int expected_tests) {
+  printf("1..%u\n", expected_tests);
+}
+
 void pass() {
   printf("ok %u\n", ++ntests);
 }
