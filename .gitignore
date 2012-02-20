@@ -13,4 +13,5 @@ META.yml
 META.json
 MYMETA.yml
 MYMETA.json
-ctest/test
+ctest/200_histogram
+ctest/100_axis
