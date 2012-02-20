@@ -19,6 +19,9 @@ mh_axis_create(unsigned int nbins, unsigned short have_varbins)
       return NULL;
     }
   }
+  else {
+    axis->bins = NULL;
+  }
 
   return axis;
 }
@@ -67,7 +70,7 @@ mh_axis_init(mh_axis_t *axis, double min, double max)
 void
 mh_axis_free(mh_axis_t *axis)
 {
-  if (MH_AXIS_ISFIXBIN(axis))
+  if (! MH_AXIS_ISFIXBIN(axis))
     free(axis->bins);
   free(axis);
 }
