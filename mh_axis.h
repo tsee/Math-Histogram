@@ -21,19 +21,19 @@ typedef struct mh_axis {
  * Separate implementations for variable and fixed bin size axis for
  * potential optimization in moving branching outside loops. */
 #define MH_AXIS_BINSIZE_FIX(a) ((a)->binsize)
-#define MH_AXIS_BINSIZE_VAR(a, ibin) ((a)->bins[ibin])
+#define MH_AXIS_BINSIZE_VAR(a, ibin) ((a)->bins[ibin] - (a)->bins[(ibin)-1])
 #define MH_AXIS_BINSIZE(a, ibin) (MH_AXIS_ISFIXBIN(a) ? MH_AXIS_BINSIZE_FIX(a) : MH_AXIS_BINSIZE_VAR((a), (ibin)))
 
-#define MH_AXIS_BIN_LOWER_FIX(a, ibin) ((a)->min + (double)(ibin) * MH_AXIS_BINSIZE_FIX(a))
-#define MH_AXIS_BIN_LOWER_VAR(a, ibin) ((a)->bins[ibin])
+#define MH_AXIS_BIN_LOWER_FIX(a, ibin) ((a)->min + (double)((ibin)-1) * MH_AXIS_BINSIZE_FIX(a))
+#define MH_AXIS_BIN_LOWER_VAR(a, ibin) ((a)->bins[(ibin)-1])
 #define MH_AXIS_BIN_LOWER(a, ibin) (MH_AXIS_ISFIXBIN(a) ? MH_AXIS_BIN_LOWER_FIX((a), (ibin)) : MH_AXIS_BIN_LOWER_VAR((a), (ibin)))
 
-#define MH_AXIS_BIN_UPPER_FIX(a, ibin) ((a)->min + (double)(ibin+1) * MH_AXIS_BINSIZE_FIX(a))
-#define MH_AXIS_BIN_UPPER_VAR(a, ibin) ((a)->bins[ibin+1])
+#define MH_AXIS_BIN_UPPER_FIX(a, ibin) ((a)->min + (double)(ibin) * MH_AXIS_BINSIZE_FIX(a))
+#define MH_AXIS_BIN_UPPER_VAR(a, ibin) ((a)->bins[ibin])
 #define MH_AXIS_BIN_UPPER(a, ibin) (MH_AXIS_ISFIXBIN(a) ? MH_AXIS_BIN_UPPER_FIX((a), (ibin)) : MH_AXIS_BIN_UPPER_VAR((a), (ibin)))
 
-#define MH_AXIS_BIN_CENTER_FIX(a, ibin) ((a)->min + ((double)(ibin)+0.5) * MH_AXIS_BINSIZE_FIX(a))
-#define MH_AXIS_BIN_CENTER_VAR(a, ibin) ( 0.5*((a)->bins[ibin] + (a)->bins[(ibin)+1]) )
+#define MH_AXIS_BIN_CENTER_FIX(a, ibin) ((a)->min + ((double)(ibin)-0.5) * MH_AXIS_BINSIZE_FIX(a))
+#define MH_AXIS_BIN_CENTER_VAR(a, ibin) ( 0.5*((a)->bins[(ibin)-1] + (a)->bins[(ibin)]) )
 #define MH_AXIS_BIN_CENTER(a, ibin) (MH_AXIS_ISFIXBIN(a) ? MH_AXIS_BIN_CENTER_FIX((a), (ibin)) : MH_AXIS_BIN_CENTER_VAR((a), (ibin)))
 
 /* for use outside the mh_axis_* functions */
@@ -53,6 +53,7 @@ mh_axis_t *mh_axis_create(unsigned int nbins, unsigned short have_varbins);
 void mh_axis_free(mh_axis_t *axis);
 /* Clones an axis */
 mh_axis_t *mh_axis_clone(mh_axis_t *axis_proto);
+
 /* Init axis properties. nbins and possibly the bins array were initialized by mh_axis_create */
 void mh_axis_init(mh_axis_t *axis, double min, double max);
 

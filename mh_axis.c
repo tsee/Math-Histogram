@@ -2,6 +2,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <float.h>
 
 mh_axis_t *
 mh_axis_create(unsigned int nbins, unsigned short have_varbins)
@@ -13,7 +14,7 @@ mh_axis_create(unsigned int nbins, unsigned short have_varbins)
   axis->nbins = nbins;
 
   if (have_varbins != MH_AXIS_OPT_FIXEDBINS) {
-    axis->bins = (double *)malloc(sizeof(double) * nbins);
+    axis->bins = (double *)malloc(sizeof(double) * (nbins+1));
     if (axis->bins == NULL) {
       free(axis);
       return NULL;
@@ -36,12 +37,12 @@ mh_axis_clone(mh_axis_t *axis_proto)
 
   axis_out->nbins = axis_proto->nbins;
   if (!MH_AXIS_ISFIXBIN(axis_proto)) {
-    axis_out->bins = (double *)malloc(sizeof(double) * axis_proto->nbins);
+    axis_out->bins = (double *)malloc(sizeof(double) * (axis_proto->nbins+1));
     if (axis_out->bins == NULL) {
       free(axis_out);
       return NULL;
     }
-    memcpy(axis_out->bins, axis_proto->bins, sizeof(double) * axis_proto->nbins);
+    memcpy(axis_out->bins, axis_proto->bins, sizeof(double) * (axis_proto->nbins+1));
   }
   else {
     axis_out->bins = NULL;
@@ -80,12 +81,16 @@ unsigned int
 mh_axis_find_bin(mh_axis_t *axis, double x)
 {
   if (MH_AXIS_ISFIXBIN(axis)) {
-    double min = MH_AXIS_MIN(axis);
+    unsigned int bin;
+    const double min = MH_AXIS_MIN(axis);
+
     if (x < min)
-      return 0;
-    else if (x > MH_AXIS_MAX(axis))
-      return MH_AXIS_NBINS(axis)+1;
-    return( (unsigned int) ((x-MH_AXIS_MIN(axis)) / MH_AXIS_BINSIZE_FIX(axis)) );
+      bin = 0;
+    else if (x >= MH_AXIS_MAX(axis))
+      bin = MH_AXIS_NBINS(axis)+1;
+    else
+      bin = 1 + (unsigned int)((x + DBL_EPSILON - min) / MH_AXIS_BINSIZE_FIX(axis));
+    return bin;
   }
   else
     return mh_axis_find_bin_var(axis, x);
