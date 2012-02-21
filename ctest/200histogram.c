@@ -5,25 +5,25 @@
 
 #include "mytap.h"
 
-mh_histogram_t *
-make_cubything_hist(unsigned int ndim)
-{
-  unsigned int i;
-  mh_histogram_t *h;
-  unsigned int nbins = 2;
-  mh_axis_t **axises = malloc(ndim * sizeof(mh_axis_t *));
-  for (i = 0; i < ndim; ++i) {
-    axises[i] = mh_axis_create(nbins+i, MH_AXIS_OPT_FIXEDBINS);
-    mh_axis_init(axises[i], 0., 1.);
-  }
 
-  h = mh_hist_create(ndim, axises);
-  free(axises);
-  return h;
-}
+void test_flat_bin_number();
+mh_histogram_t * make_cubything_hist(unsigned int ndim);
 
 int
 main (int argc, char **argv)
+{
+  UNUSED(argc);
+  UNUSED(argv);
+  pass();
+
+  test_flat_bin_number();
+
+  done_testing();
+  return 0;
+}
+
+
+void test_flat_bin_number()
 {
   unsigned int i, x, y, z, prev_bin_no;
   mh_histogram_t *h1;
@@ -34,10 +34,6 @@ main (int argc, char **argv)
   unsigned int dim_bins3[3];
   char buf[2048];
   char dimbuf[2048];
-
-  UNUSED(argc);
-  UNUSED(argv);
-  ok(1);
 
   h1 = make_cubything_hist(1);
   for (i = 0; i <= 3; ++i) {
@@ -82,9 +78,22 @@ main (int argc, char **argv)
   mh_hist_free(h1);
   mh_hist_free(h2);
   mh_hist_free(h3);
-
-  done_testing();
-  return 0;
 }
 
 
+mh_histogram_t *
+make_cubything_hist(unsigned int ndim)
+{
+  unsigned int i;
+  mh_histogram_t *h;
+  unsigned int nbins = 2;
+  mh_axis_t **axises = malloc(ndim * sizeof(mh_axis_t *));
+  for (i = 0; i < ndim; ++i) {
+    axises[i] = mh_axis_create(nbins+i, MH_AXIS_OPT_FIXEDBINS);
+    mh_axis_init(axises[i], 0., 1.);
+  }
+
+  h = mh_hist_create(ndim, axises);
+  free(axises);
+  return h;
+}
