@@ -25,7 +25,7 @@ make_cubything_hist(unsigned int ndim)
 int
 main (int argc, char **argv)
 {
-  unsigned int i, x, y, z;
+  unsigned int i, x, y, z, prev_bin_no;
   mh_histogram_t *h1;
   mh_histogram_t *h2;
   mh_histogram_t *h3;
@@ -42,15 +42,22 @@ main (int argc, char **argv)
   h1 = make_cubything_hist(1);
   for (i = 0; i <= 3; ++i) {
     dim_bins1[0] = i;
-    ok_m(i == mh_hist_flat_bin_number(h1, dim_bins1), "1d cubything");
+    is_int_m(mh_hist_flat_bin_number(h1, dim_bins1), i, "1d cubything");
   }
   
   h2 = make_cubything_hist(2);
+  sprintf(dimbuf, "with o/u xbins=%u, ybins=%u", 2+MH_AXIS_NBINS(h2->axises[0]), 2+MH_AXIS_NBINS(h2->axises[1]));
+  prev_bin_no = 0;
   for (y = 0; y <= 4; ++y) {
     dim_bins2[1] = y;
     for (x = 0; x <= 3; ++x) {
+      const unsigned int exp = x + y*(2+2);
+      if (x != 0 || y != 0)
+        is_int_m(exp, prev_bin_no+1, "contiguous bins");
+      prev_bin_no = exp;
       dim_bins2[0] = x;
-      ok_m(x + y*(3+2) == mh_hist_flat_bin_number(h2, dim_bins2), "2d cubything");
+      sprintf(buf, "2d cubything, x=%u y=%u, res=%u exp=%u, (%s)", x, y, mh_hist_flat_bin_number(h2, dim_bins2), exp, dimbuf);
+      is_int_m(mh_hist_flat_bin_number(h2, dim_bins2), exp, buf);
     }
   }
 
@@ -61,10 +68,13 @@ main (int argc, char **argv)
     for (y = 0; y <= 4; ++y) {
       dim_bins3[1] = y;
       for (x = 0; x <= 3; ++x) {
-        unsigned int exp = x + y*(3+2) + z*(4+2)*(3+2);
+        const unsigned int exp = x + y*(2+2) + z*(3+2)*(2+2);
+        if (x != 0 || y != 0 || z != 0)
+          is_int_m(exp, prev_bin_no+1, "contiguous bins");
+        prev_bin_no = exp;
         dim_bins3[0] = x;
         sprintf(buf, "3d cubything, x=%u y=%u z=%u, res=%u exp=%u, (%s)", x, y, z, mh_hist_flat_bin_number(h3, dim_bins3), exp, dimbuf);
-        ok_m(exp == mh_hist_flat_bin_number(h3, dim_bins3), buf);
+        is_int_m(mh_hist_flat_bin_number(h3, dim_bins3), exp, buf);
       }
     }
   }
