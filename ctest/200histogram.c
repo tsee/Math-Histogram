@@ -7,7 +7,8 @@
 
 
 void test_flat_bin_number();
-mh_histogram_t * make_cubything_hist(unsigned int ndim);
+mh_histogram_t *make_cubything_hist(unsigned int ndim);
+mh_histogram_t *histogram_clone_dance(mh_histogram_t *input);
 
 int
 main (int argc, char **argv)
@@ -16,14 +17,15 @@ main (int argc, char **argv)
   UNUSED(argv);
   pass();
 
-  test_flat_bin_number();
+  test_flat_bin_number(0);
+  test_flat_bin_number(1);
 
   done_testing();
   return 0;
 }
 
 
-void test_flat_bin_number()
+void test_flat_bin_number(int do_clone)
 {
   unsigned int i, x, y, z, prev_bin_no;
   mh_histogram_t *h1;
@@ -36,12 +38,16 @@ void test_flat_bin_number()
   char dimbuf[2048];
 
   h1 = make_cubything_hist(1);
+  if (do_clone != 0)
+    h1 = histogram_clone_dance(h1);
   for (i = 0; i <= 3; ++i) {
     dim_bins1[0] = i;
     is_int_m(mh_hist_flat_bin_number(h1, dim_bins1), i, "1d cubything");
   }
   
   h2 = make_cubything_hist(2);
+  if (do_clone != 0)
+    h2 = histogram_clone_dance(h2);
   sprintf(dimbuf, "with o/u xbins=%u, ybins=%u", 2+MH_AXIS_NBINS(h2->axises[0]), 2+MH_AXIS_NBINS(h2->axises[1]));
   prev_bin_no = 0;
   for (y = 0; y <= 4; ++y) {
@@ -58,6 +64,8 @@ void test_flat_bin_number()
   }
 
   h3 = make_cubything_hist(3);
+  if (do_clone != 0)
+    h3 = histogram_clone_dance(h3);
   sprintf(dimbuf, "with o/u xbins=%u, ybins=%u, zbins=%u", 2+MH_AXIS_NBINS(h3->axises[0]), 2+MH_AXIS_NBINS(h3->axises[1]), 2+MH_AXIS_NBINS(h3->axises[2]));
   for (z = 0; z <= 5; ++z) {
     dim_bins3[2] = z;
@@ -78,6 +86,17 @@ void test_flat_bin_number()
   mh_hist_free(h1);
   mh_hist_free(h2);
   mh_hist_free(h3);
+}
+
+
+mh_histogram_t *
+histogram_clone_dance(mh_histogram_t *input)
+{
+  mh_histogram_t *cl = mh_hist_clone(input, 0);
+  mh_hist_free(input);
+  input = mh_hist_clone(cl, 1);
+  mh_hist_free(cl);
+  return input;
 }
 
 

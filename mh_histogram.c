@@ -35,6 +35,47 @@ mh_hist_create(unsigned short ndim, mh_axis_t **axises)
   return hist;
 }
 
+mh_histogram_t *
+mh_hist_clone(mh_histogram_t *hist_proto, int do_copy_data)
+{
+  unsigned int nbins, i;
+  mh_histogram_t *hist = malloc(sizeof(mh_histogram_t));
+  if (hist == NULL)
+    return NULL;
+  hist->ndim = MH_HIST_NDIM(hist_proto);
+
+  hist->axises = malloc(sizeof(mh_axis_t *) * MH_HIST_NDIM(hist));
+  if (hist->axises == NULL) {
+    free(hist);
+    return NULL;
+  }
+  for (i = 0; i < hist->ndim; ++i)
+    hist->axises[i] = mh_axis_clone(hist_proto->axises[i]);
+
+  nbins = mh_hist_total_nbins(hist_proto);
+  if (do_copy_data != 0) {
+    hist->data = (double *)malloc(nbins * sizeof(double));
+    memcpy(hist->data, hist_proto->data, nbins * sizeof(double));
+
+    /* TODO should initialization live elsewhere? */
+    hist->total = MH_HIST_TOTAL(hist_proto);
+    hist->nfills = MH_HIST_NFILLS(hist_proto);
+  }
+  else {
+    hist->data = (double *)calloc(nbins, sizeof(double));
+    if (hist->data == NULL) {
+      free(hist->axises);
+      free(hist);
+      return NULL;
+    }
+    /* TODO should initialization live elsewhere? */
+    hist->total = 0.;
+    hist->nfills = 0;
+  }
+
+  return hist;
+}
+
 
 void
 mh_hist_free(mh_histogram_t *hist)

@@ -21,11 +21,18 @@ typedef struct mh_histogram {
 #define MH_HIST_NDIM(h) ((h)->ndim)
 #define MH_HIST_OVERFLOW(h, i) ((h)->ndim)
 
+#define MH_HIST_TOTAL(h) ((h)->total)
+#define MH_HIST_NFILLS(h) ((h)->nfills)
+
 /* Creates a new histogram with the specified dimensionality and axises.
  * Takes ownership of the (presumably individually allocated) mh_axis_t objects!
  * Does not take ownership of the outer array of pointers.
  */
 mh_histogram_t *mh_hist_create(unsigned short ndim, mh_axis_t **axises);
+
+/* Clones a full histogram. If do_copy_data isn't set, zeroes the data array,
+ * creating an empty clone.. */
+mh_histogram_t *mh_hist_clone(mh_histogram_t *hist_proto, int do_copy_data);
 
 /* Free a histogram */
 void mh_hist_free(mh_histogram_t *hist);
@@ -39,4 +46,5 @@ unsigned int mh_hist_flat_bin_number(mh_histogram_t *hist, unsigned int dim_bins
 /* Calculate and return the total number of bins in a histogram
  * including over- and underflow. */
 unsigned int mh_hist_total_nbins(mh_histogram_t *hist);
+
 #endif
