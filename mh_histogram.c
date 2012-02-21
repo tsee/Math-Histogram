@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 mh_histogram_t *
 mh_hist_create(unsigned short ndim, mh_axis_t **axises)
