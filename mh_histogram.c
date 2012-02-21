@@ -13,7 +13,7 @@ mh_hist_create(unsigned short ndim, mh_axis_t **axises)
   hist->ndim = ndim;
 
   hist->axises = malloc(sizeof(mh_axis_t *) * ndim);
-  if (hist == NULL) {
+  if (hist->axises == NULL) {
     free(hist);
     return NULL;
   }
