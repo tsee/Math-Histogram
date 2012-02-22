@@ -13,8 +13,15 @@ mh_hist_create(unsigned short ndim, mh_axis_t **axises)
     return NULL;
   hist->ndim = ndim;
 
+  hist->bin_buffer = malloc(sizeof(unsigned int) * ndim);
+  if (hist->bin_buffer == NULL) {
+    free(hist);
+    return NULL;
+  }
+
   hist->axises = malloc(sizeof(mh_axis_t *) * ndim);
   if (hist->axises == NULL) {
+    free(hist->bin_buffer);
     free(hist);
     return NULL;
   }
@@ -24,6 +31,7 @@ mh_hist_create(unsigned short ndim, mh_axis_t **axises)
   nbins = mh_hist_total_nbins(hist);
   hist->data = (double *)calloc(nbins, sizeof(double));
   if (hist->data == NULL) {
+    free(hist->bin_buffer);
     free(hist->axises);
     free(hist);
     return NULL;
@@ -45,8 +53,15 @@ mh_hist_clone(mh_histogram_t *hist_proto, int do_copy_data)
     return NULL;
   hist->ndim = MH_HIST_NDIM(hist_proto);
 
+  hist->bin_buffer = malloc(sizeof(unsigned int) * MH_HIST_NDIM(hist));
+  if (hist->bin_buffer == NULL) {
+    free(hist);
+    return NULL;
+  }
+
   hist->axises = malloc(sizeof(mh_axis_t *) * MH_HIST_NDIM(hist));
   if (hist->axises == NULL) {
+    free(hist->bin_buffer);
     free(hist);
     return NULL;
   }
@@ -56,6 +71,12 @@ mh_hist_clone(mh_histogram_t *hist_proto, int do_copy_data)
   nbins = mh_hist_total_nbins(hist_proto);
   if (do_copy_data != 0) {
     hist->data = (double *)malloc(nbins * sizeof(double));
+    if (hist->data == NULL) {
+      free(hist->bin_buffer);
+      free(hist->axises);
+      free(hist);
+      return NULL;
+    }
     memcpy(hist->data, hist_proto->data, nbins * sizeof(double));
 
     /* TODO should initialization live elsewhere? */
@@ -65,6 +86,7 @@ mh_hist_clone(mh_histogram_t *hist_proto, int do_copy_data)
   else {
     hist->data = (double *)calloc(nbins, sizeof(double));
     if (hist->data == NULL) {
+      free(hist->bin_buffer);
       free(hist->axises);
       free(hist);
       return NULL;
@@ -86,6 +108,7 @@ mh_hist_free(mh_histogram_t *hist)
   for (i = 0; i < ndim; ++i)
     mh_axis_free(axises[i]);
 
+  free(hist->bin_buffer);
   free(hist->axises);
   free(hist->data);
   free(hist);
@@ -151,10 +174,8 @@ mh_hist_find_bin_numbers(mh_histogram_t *hist, double coord[], unsigned int bin[
 unsigned int
 mh_hist_find_bin(mh_histogram_t *hist, double coord[])
 {
-  unsigned int *bin_numbers = malloc(sizeof(unsigned int) * MH_HIST_NDIM(hist));
-  const unsigned int rv = mh_hist_find_bin_buf(hist, coord, bin_numbers);
-  free(bin_numbers);
-  return rv;
+  mh_hist_find_bin_numbers(hist, coord, hist->bin_buffer);
+  return mh_hist_flat_bin_number(hist, hist->bin_buffer);
 }
 
 
@@ -175,9 +196,8 @@ mh_hist_flat_bin_number_to_dim_bins(mh_histogram_t *hist,
   if (ndim == 1)
     dim_bins[0] = flat_bin;
   else {
-    register unsigned int bin_index;
     register int i, nbins;
-    mh_axis_t **axises = hist->axises;
+    register mh_axis_t **axises = hist->axises;
 
     for (i = 0; i < ndim; ++i) {
       nbins = MH_AXIS_NBINS(axises[i])+2;
@@ -186,3 +206,14 @@ mh_hist_flat_bin_number_to_dim_bins(mh_histogram_t *hist,
     }
   }
 }
+
+unsigned int
+mh_hist_fill(mh_histogram_t *hist, double x[])
+{
+  const unsigned int flat_bin = mh_hist_find_bin(hist, x);
+  hist->data[flat_bin] += 1;
+  hist->total += 1;
+  hist->nfills++;
+  return flat_bin;
+}
+

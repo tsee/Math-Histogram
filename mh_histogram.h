@@ -16,6 +16,9 @@ typedef struct mh_histogram {
 
   /* derived content */
   double total;
+
+  /* scratch space */
+  unsigned int *bin_buffer;
 } mh_histogram_t;
 
 #define MH_HIST_NDIM(h) ((h)->ndim)
@@ -23,6 +26,11 @@ typedef struct mh_histogram {
 
 #define MH_HIST_TOTAL(h) ((h)->total)
 #define MH_HIST_NFILLS(h) ((h)->nfills)
+
+/*
+ *
+ * Allocation/deallocation related functions
+ */
 
 /* Creates a new histogram with the specified dimensionality and axises.
  * Takes ownership of the (presumably individually allocated) mh_axis_t objects!
@@ -36,6 +44,12 @@ mh_histogram_t *mh_hist_clone(mh_histogram_t *hist_proto, int do_copy_data);
 
 /* Free a histogram */
 void mh_hist_free(mh_histogram_t *hist);
+
+
+/*
+ *
+ * Bin/coordinate calculation related functions
+ */
 
 /* Given a vector of bin numbers in each dimension, returns the index into
  * the 1D data array. The 1D array includes under- and overflow bins,
@@ -55,9 +69,16 @@ unsigned int mh_hist_total_nbins(mh_histogram_t *hist);
 void mh_hist_find_bin_numbers(mh_histogram_t *hist, double coord[], unsigned int bin[]);
 
 /* Given an array of ndim coordinates, finds the internal bin id in the histogram.
- * mh_hist_find_bin_buf does the same but can be more efficient if you have a buffer
- * available for ndim unsigned ints since it avoids doing any heap allocations. */
+ * mh_hist_find_bin_buf does the same but also exposes the ndim bin numbers. */
 unsigned int mh_hist_find_bin(mh_histogram_t *hist, double coord[]);
 unsigned int mh_hist_find_bin_buf(mh_histogram_t *hist, double coord[], unsigned int bin_number_buffer[]);
+
+/*
+ *
+ * Histogram data operations
+ */
+
+/* Adds 1 to the bin at the coordinates x */
+unsigned int mh_hist_fill(mh_histogram_t *hist, double x[]);
 
 #endif
