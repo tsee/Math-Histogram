@@ -19,7 +19,7 @@ main (int argc, char **argv)
   pass();
 
   for (i = 0; i <= 1; ++i) {
-    for (j = 2; j < 5; ++j) {
+    for (j = 2; j < 4; ++j) {
       /* without (0) and with (1) cloning */
       test_flat_bin_number(i, MH_AXIS_OPT_FIXEDBINS, j);
       test_flat_bin_number(i, MH_AXIS_OPT_VARBINS, j);
@@ -41,6 +41,7 @@ void test_flat_bin_number(int do_clone, int varbins, unsigned int base_nbins)
   unsigned int dim_bins2[2];
   unsigned int dim_bins3[3];
   unsigned int dim_bins_buf[3];
+  unsigned int flat_bin;
   double coord1[1];
   double coord2[2];
   double coord3[3];
@@ -53,13 +54,18 @@ void test_flat_bin_number(int do_clone, int varbins, unsigned int base_nbins)
   for (i = 0; i <= base_nbins+1; ++i) {
     dim_bins1[0] = i;
     coord1[0] = (double)i/(double)base_nbins - 1e-5;
-    is_int_m(mh_hist_flat_bin_number(h1, dim_bins1), i, "1d cubything");
+    flat_bin = mh_hist_flat_bin_number(h1, dim_bins1);
+
+    is_int_m(flat_bin, i, "1d cubything, from bin no");
     is_int_m(mh_hist_find_bin(h1, coord1), i, "1d cubything, from coord");
     mh_hist_find_bin_numbers(h1, coord1, dim_bins_buf);
     is_int_m(dim_bins_buf[0], i, "1d cubything finding bin nums. from coords");
     is_int_m(mh_hist_find_bin_buf(h1, coord1, dim_bins_buf), i, "1d cubything, from coord buf");
+
+    mh_hist_flat_bin_number_to_dim_bins(h1, flat_bin, dim_bins_buf);
+    is_int_m(dim_bins_buf[0], i, "1d cubything, reverse");
   }
-  
+
   h2 = make_cubything_hist(2, base_nbins, varbins);
   if (do_clone != 0)
     h2 = histogram_clone_dance(h2);
@@ -75,13 +81,20 @@ void test_flat_bin_number(int do_clone, int varbins, unsigned int base_nbins)
       dim_bins2[0] = x;
       coord2[0] = (double)x/(double)base_nbins - 1e-5;
       coord2[1] = (double)y/(double)(base_nbins+1.) - 1e-5;
+      flat_bin = mh_hist_flat_bin_number(h2, dim_bins2);
+
       sprintf(buf, "2d cubything, x=%u y=%u, res=%u exp=%u, (%s)", x, y, mh_hist_flat_bin_number(h2, dim_bins2), exp, dimbuf);
-      is_int_m(mh_hist_flat_bin_number(h2, dim_bins2), exp, buf);
+      is_int_m(flat_bin, exp, buf);
       is_int_m(mh_hist_find_bin(h2, coord2), exp, buf);
       mh_hist_find_bin_numbers(h2, coord2, dim_bins_buf);
       is_int(dim_bins_buf[0], x);
       is_int(dim_bins_buf[1], y);
       is_int_m(mh_hist_find_bin_buf(h2, coord2, dim_bins_buf), exp, buf);
+
+      sprintf(buf, "2d cubything, reverse: flat_bin=%u x=%u y=%u, res=%u exp=%u, (%s)", flat_bin, x, y, mh_hist_flat_bin_number(h2, dim_bins2), exp, dimbuf);
+      mh_hist_flat_bin_number_to_dim_bins(h2, flat_bin, dim_bins_buf);
+      is_int_m(dim_bins_buf[0], dim_bins2[0], buf);
+      is_int_m(dim_bins_buf[1], dim_bins2[1], buf);
     }
   }
 
@@ -103,7 +116,9 @@ void test_flat_bin_number(int do_clone, int varbins, unsigned int base_nbins)
         coord3[1] = (double)y/(double)(base_nbins+1) - 1e-5;
         coord3[2] = (double)z/(double)(base_nbins+2) - 1e-5;
         sprintf(buf, "3d cubything, x=%u y=%u z=%u, res=%u exp=%u, (%s)", x, y, z, mh_hist_flat_bin_number(h3, dim_bins3), exp, dimbuf);
-        is_int_m(mh_hist_flat_bin_number(h3, dim_bins3), exp, buf);
+
+        flat_bin = mh_hist_flat_bin_number(h3, dim_bins3);
+        is_int_m(flat_bin, exp, buf);
 
         is_int_m(mh_hist_find_bin(h3, coord3), exp, buf);
         mh_hist_find_bin_numbers(h3, coord3, dim_bins_buf);
@@ -111,6 +126,12 @@ void test_flat_bin_number(int do_clone, int varbins, unsigned int base_nbins)
         is_int(dim_bins_buf[1], y);
         is_int(dim_bins_buf[2], z);
         is_int_m(mh_hist_find_bin_buf(h3, coord3, dim_bins_buf), exp, buf);
+
+        sprintf(buf, "3d cubything, reverse: flat_bin=%u x=%u y=%u z=%u, res=%u exp=%u, (%s)", flat_bin, x, y, z, mh_hist_flat_bin_number(h3, dim_bins3), exp, dimbuf);
+        mh_hist_flat_bin_number_to_dim_bins(h3, flat_bin, dim_bins_buf);
+        is_int_m(dim_bins_buf[0], dim_bins3[0], buf);
+        is_int_m(dim_bins_buf[1], dim_bins3[1], buf);
+        is_int_m(dim_bins_buf[2], dim_bins3[2], buf);
       }
     }
   }

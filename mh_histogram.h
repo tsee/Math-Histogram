@@ -43,7 +43,9 @@ void mh_hist_free(mh_histogram_t *hist);
  * overflow. */
 unsigned int mh_hist_flat_bin_number(mh_histogram_t *hist, unsigned int dim_bins[]);
 
-/* TODO implement reverse of mh_hist_flat_bin_number: flat number to double[ndims] */
+/* Reverse of mh_hist_flat_bin_number: flat number to unsigned int[ndims].
+ * Output array needs to be allocated by the caller. Doesn't do bounds checking. */
+void mh_hist_flat_bin_number_to_dim_bins(mh_histogram_t *hist, unsigned int flat_bin, unsigned int dim_bins[]);
 
 /* Calculate and return the total number of bins in a histogram
  * including over- and underflow. */

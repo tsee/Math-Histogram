@@ -165,3 +165,24 @@ mh_hist_find_bin_buf(mh_histogram_t *hist, double coord[], unsigned int bin_numb
   return mh_hist_flat_bin_number(hist, bin_number_buffer);
 }
 
+
+void
+mh_hist_flat_bin_number_to_dim_bins(mh_histogram_t *hist,
+                                    unsigned int flat_bin,
+                                    unsigned int dim_bins[])
+{
+  const unsigned short ndim = MH_HIST_NDIM(hist);
+  if (ndim == 1)
+    dim_bins[0] = flat_bin;
+  else {
+    register unsigned int bin_index;
+    register int i, nbins;
+    mh_axis_t **axises = hist->axises;
+
+    for (i = 0; i < ndim; ++i) {
+      nbins = MH_AXIS_NBINS(axises[i])+2;
+      dim_bins[i] = flat_bin % nbins;
+      flat_bin = (flat_bin - dim_bins[i]) / nbins;
+    }
+  }
+}
