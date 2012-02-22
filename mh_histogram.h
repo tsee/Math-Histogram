@@ -43,8 +43,19 @@ void mh_hist_free(mh_histogram_t *hist);
  * overflow. */
 unsigned int mh_hist_flat_bin_number(mh_histogram_t *hist, unsigned int dim_bins[]);
 
+/* TODO implement reverse of mh_hist_flat_bin_number: flat number to double[ndims] */
+
 /* Calculate and return the total number of bins in a histogram
  * including over- and underflow. */
 unsigned int mh_hist_total_nbins(mh_histogram_t *hist);
+
+/* Finds the set of bin numbers from a set of coordinates. Allocations are resp. of caller. */
+void mh_hist_find_bin_numbers(mh_histogram_t *hist, double coord[], unsigned int bin[]);
+
+/* Given an array of ndim coordinates, finds the internal bin id in the histogram.
+ * mh_hist_find_bin_buf does the same but can be more efficient if you have a buffer
+ * available for ndim unsigned ints since it avoids doing any heap allocations. */
+unsigned int mh_hist_find_bin(mh_histogram_t *hist, double coord[]);
+unsigned int mh_hist_find_bin_buf(mh_histogram_t *hist, double coord[], unsigned int bin_number_buffer[]);
 
 #endif

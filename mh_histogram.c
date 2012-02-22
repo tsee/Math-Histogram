@@ -135,3 +135,33 @@ mh_hist_total_nbins(mh_histogram_t *hist)
   return bins;
 }
 
+
+void
+mh_hist_find_bin_numbers(mh_histogram_t *hist, double coord[], unsigned int bin[])
+{
+  const unsigned int ndim = MH_HIST_NDIM(hist);
+  unsigned int i;
+  mh_axis_t **axises = hist->axises;;
+  for (i = 0; i < ndim; ++i) {
+    bin[i] = mh_axis_find_bin(axises[i], coord[i]);
+  }
+}
+
+
+unsigned int
+mh_hist_find_bin(mh_histogram_t *hist, double coord[])
+{
+  unsigned int *bin_numbers = malloc(sizeof(unsigned int) * MH_HIST_NDIM(hist));
+  const unsigned int rv = mh_hist_find_bin_buf(hist, coord, bin_numbers);
+  free(bin_numbers);
+  return rv;
+}
+
+
+unsigned int
+mh_hist_find_bin_buf(mh_histogram_t *hist, double coord[], unsigned int bin_number_buffer[])
+{
+  mh_hist_find_bin_numbers(hist, coord, bin_number_buffer);
+  return mh_hist_flat_bin_number(hist, bin_number_buffer);
+}
+
