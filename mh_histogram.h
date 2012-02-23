@@ -27,6 +27,7 @@ typedef struct mh_histogram {
 
 #define MH_HIST_TOTAL(h) ((h)->total)
 #define MH_HIST_NFILLS(h) ((h)->nfills)
+#define MH_HIST_AXIS(h, idim) ((h)->axises[idim])
 
 /* A pre-allocated array of unsigned ints with "ndim" entries. That is,
  * you are free to use this to pass a set of "ndim" unsigned ints to
