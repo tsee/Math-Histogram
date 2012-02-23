@@ -24,7 +24,6 @@ typedef struct mh_histogram {
 } mh_histogram_t;
 
 #define MH_HIST_NDIM(h) ((h)->ndim)
-#define MH_HIST_OVERFLOW(h, i) ((h)->ndim)
 
 #define MH_HIST_TOTAL(h) ((h)->total)
 #define MH_HIST_NFILLS(h) ((h)->nfills)
