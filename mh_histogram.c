@@ -225,3 +225,60 @@ mh_hist_fill(mh_histogram_t *hist, double x[])
   return flat_bin;
 }
 
+
+unsigned int
+mh_hist_fill_w(mh_histogram_t *hist, double x[], double weight)
+{
+  const unsigned int flat_bin = mh_hist_find_bin(hist, x);
+  hist->data[flat_bin] += weight;
+  hist->total += weight;
+  hist->nfills++;
+  return flat_bin;
+}
+
+
+void
+mh_hist_fill_n(mh_histogram_t *hist, unsigned int n, double **xs)
+{
+  register unsigned int flat_bin;
+  register unsigned int i;
+  for (i = 0; i < n; ++i) {
+    flat_bin = mh_hist_find_bin(hist, xs[i]);
+    hist->data[flat_bin] += 1;
+  }
+  hist->nfills += n;
+  hist->total += n;
+}
+
+
+void
+mh_hist_fill_nw(mh_histogram_t *hist, unsigned int n, double **xs, double weights[])
+{
+  register unsigned int flat_bin;
+  register unsigned int i;
+  double w;
+  for (i = 0; i < n; ++i) {
+    w = weights[i];
+    flat_bin = mh_hist_find_bin(hist, xs[i]);
+    hist->data[flat_bin] += w;
+    hist->nfills += w;
+    hist->total += w;
+  }
+}
+
+
+void
+mh_hist_set_bin_content(mh_histogram_t *hist, unsigned int dim_bins[], double content)
+{
+  unsigned int flat_bin = mh_hist_flat_bin_number(hist, dim_bins);
+  double old = hist->data[flat_bin];
+  hist->data[flat_bin] = content;
+  hist->total =+ content - old;
+}
+
+
+double
+mh_hist_get_bin_content(mh_histogram_t *hist, unsigned int dim_bins[])
+{
+  return hist->data[mh_hist_flat_bin_number(hist, dim_bins)];
+}

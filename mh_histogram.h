@@ -90,4 +90,18 @@ unsigned int mh_hist_find_bin_buf(mh_histogram_t *hist, double coord[], unsigned
 /* Adds 1 to the bin at the coordinates x */
 unsigned int mh_hist_fill(mh_histogram_t *hist, double x[]);
 
+/* Adds 1 to each bin at each of the coordinates in xs.
+ * This is to mean that xs is an array of n coordinate sets:
+ * xs[1][0] would be the first coordinate of the second coordinate set. */
+void mh_hist_fill_n(mh_histogram_t *hist, unsigned int n, double **xs);
+
+/* Adds "weight" to the bin at the coordinates x. */
+unsigned int mh_hist_fill_w(mh_histogram_t *hist, double x[], double weight);
+
+/* Adds weights[i] to each of the bins at the coordinates in xs (see mh_hist_fill_n) */
+void mh_hist_fill_nw(mh_histogram_t *hist, unsigned int n, double **xs, double weights[]);
+
+/* Sets the bin content of the bin defined by the provided per-dimension bin numbers */
+void mh_hist_set_bin_content(mh_histogram_t *hist, unsigned int dim_bins[], double content);
+
 #endif
