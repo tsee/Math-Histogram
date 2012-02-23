@@ -227,9 +227,31 @@ mh_hist_fill(mh_histogram_t *hist, double x[])
 
 
 unsigned int
+mh_hist_fill_bin(mh_histogram_t *hist, unsigned int dim_bins[])
+{
+  const unsigned int flat_bin = mh_hist_flat_bin_number(hist, dim_bins);
+  hist->data[flat_bin] += 1;
+  hist->total += 1;
+  hist->nfills++;
+  return flat_bin;
+}
+
+
+unsigned int
 mh_hist_fill_w(mh_histogram_t *hist, double x[], double weight)
 {
   const unsigned int flat_bin = mh_hist_find_bin(hist, x);
+  hist->data[flat_bin] += weight;
+  hist->total += weight;
+  hist->nfills++;
+  return flat_bin;
+}
+
+
+unsigned int
+mh_hist_fill_bin_w(mh_histogram_t *hist, unsigned int dim_bins[], double weight)
+{
+  const unsigned int flat_bin = mh_hist_flat_bin_number(hist, dim_bins);
   hist->data[flat_bin] += weight;
   hist->total += weight;
   hist->nfills++;
@@ -244,6 +266,20 @@ mh_hist_fill_n(mh_histogram_t *hist, unsigned int n, double **xs)
   register unsigned int i;
   for (i = 0; i < n; ++i) {
     flat_bin = mh_hist_find_bin(hist, xs[i]);
+    hist->data[flat_bin] += 1;
+  }
+  hist->nfills += n;
+  hist->total += n;
+}
+
+
+void
+mh_hist_fill_bin_n(mh_histogram_t *hist, unsigned int n, unsigned int **dim_bins)
+{
+  register unsigned int flat_bin;
+  register unsigned int i;
+  for (i = 0; i < n; ++i) {
+    flat_bin = mh_hist_flat_bin_number(hist, dim_bins[i]);
     hist->data[flat_bin] += 1;
   }
   hist->nfills += n;
@@ -268,6 +304,22 @@ mh_hist_fill_nw(mh_histogram_t *hist, unsigned int n, double **xs, double weight
 
 
 void
+mh_hist_fill_bin_nw(mh_histogram_t *hist, unsigned int n, unsigned int **dim_bins, double weights[])
+{
+  register unsigned int flat_bin;
+  register unsigned int i;
+  double w;
+  for (i = 0; i < n; ++i) {
+    w = weights[i];
+    flat_bin = mh_hist_flat_bin_number(hist, dim_bins[i]);
+    hist->data[flat_bin] += w;
+    hist->nfills += w;
+    hist->total += w;
+  }
+}
+
+
+void
 mh_hist_set_bin_content(mh_histogram_t *hist, unsigned int dim_bins[], double content)
 {
   unsigned int flat_bin = mh_hist_flat_bin_number(hist, dim_bins);
@@ -282,3 +334,4 @@ mh_hist_get_bin_content(mh_histogram_t *hist, unsigned int dim_bins[])
 {
   return hist->data[mh_hist_flat_bin_number(hist, dim_bins)];
 }
+

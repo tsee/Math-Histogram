@@ -101,7 +101,21 @@ unsigned int mh_hist_fill_w(mh_histogram_t *hist, double x[], double weight);
 /* Adds weights[i] to each of the bins at the coordinates in xs (see mh_hist_fill_n) */
 void mh_hist_fill_nw(mh_histogram_t *hist, unsigned int n, double **xs, double weights[]);
 
+/* The follwing four functions are the respective same as the
+ * above mh_hist_fill_* functions, except that they operate on ndim bin indexes
+ * instead of user coordinates.
+ */
+unsigned int mh_hist_fill_bin(mh_histogram_t *hist, unsigned int dim_bins[]);
+unsigned int mh_hist_fill_bin_w(mh_histogram_t *hist, unsigned int dim_bins[], double weight);
+void mh_hist_fill_bin_n(mh_histogram_t *hist, unsigned int n, unsigned int **dim_bins);
+void mh_hist_fill_bin_nw(mh_histogram_t *hist, unsigned int n, unsigned int **dim_bins, double weights[]);
+
 /* Sets the bin content of the bin defined by the provided per-dimension bin numbers */
 void mh_hist_set_bin_content(mh_histogram_t *hist, unsigned int dim_bins[], double content);
+
+/* Returns the content of the bin identified by dim_bins bin numbers. */
+double mh_hist_get_bin_content(mh_histogram_t *hist, unsigned int dim_bins[]);
+
+
 
 #endif
