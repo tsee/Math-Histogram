@@ -18,7 +18,9 @@ typedef struct mh_histogram {
   double total;
 
   /* scratch space */
-  unsigned int *bin_buffer;
+  unsigned int *bin_buffer; /* purely internal! */
+  /* May be used for passing ndim arguments to mh_hist_ functions only, see MH_HIST_ARG_BIN_BUFFER */
+  unsigned int *arg_bin_buffer;
 } mh_histogram_t;
 
 #define MH_HIST_NDIM(h) ((h)->ndim)
@@ -26,6 +28,13 @@ typedef struct mh_histogram {
 
 #define MH_HIST_TOTAL(h) ((h)->total)
 #define MH_HIST_NFILLS(h) ((h)->nfills)
+
+/* A pre-allocated array of unsigned ints with "ndim" entries. That is,
+ * you are free to use this to pass a set of "ndim" unsigned ints to
+ * one of the API functions. Use it locally only! Do not use it in any other
+ * way then to save a malloc/free pair (due to the dynamic nature of the
+ * number of dimensions in a histogram) when calling an API function! */
+#define MH_HIST_ARG_BIN_BUFFER(h) ((h)->arg_bin_buffer)
 
 /*
  *
