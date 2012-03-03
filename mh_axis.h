@@ -42,6 +42,9 @@ typedef struct mh_axis {
 #define MH_AXIS_NBINS(a) ((a)->nbins)
 #define MH_AXIS_WIDTH(a) ((a)->width)
 
+/* Flags for controlling bin style */
+#define MH_AXIS_OPT_FIXEDBINS 0
+#define MH_AXIS_OPT_VARBINS 1
 /*
  * Allocates a new axis struct in the provided pointer.
  * Needs the number of bins in the axis and a boolean indicating
@@ -68,8 +71,5 @@ unsigned int mh_axis_find_bin(mh_axis_t *axis, double x);
 #define MH_AXIS_FIND_BIN_FIX(a, x) ( ((x)-(a)->min) / MH_AXIS_BINSIZE_FIX(a) )
 /* variable bin size bin finder, O(log N) */
 unsigned int mh_axis_find_bin_var(mh_axis_t *axis, double x);
-
-#define MH_AXIS_OPT_FIXEDBINS 0
-#define MH_AXIS_OPT_VARBINS 1
 
 #endif
