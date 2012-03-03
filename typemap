@@ -2,7 +2,8 @@
 # O_OBJECT      -> link an opaque C or C++ object to a blessed Perl object.
 
 TYPEMAP
-mh_histogram *        O_OBJECT
+mh_histogram_t *        O_OBJECT
+mh_axis_t *        O_OBJECT
 
 OUTPUT
 
