@@ -1,0 +1,94 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <mh_histogram.h>
+#include <mh_axis.h>
+
+#include "mytap.h"
+
+
+mh_histogram_t *histogram_clone_dance(mh_histogram_t *input);
+void run_tests();
+
+int
+main (int argc, char **argv)
+{
+  UNUSED(argc);
+  UNUSED(argv);
+  pass();
+
+  run_tests(0);
+  run_tests(1);
+
+  done_testing();
+  return 0;
+}
+
+void
+run_tests(int do_clone)
+{
+  mh_histogram_t *h, *htmp;
+  mh_axis_t *axises[4];
+  double *w;
+  double *c;
+  unsigned int dim_bins[4];
+  const unsigned int ndim = 4;
+  unsigned int i;
+  
+  axises[0] = mh_axis_create(3, MH_AXIS_OPT_FIXEDBINS);
+  mh_axis_init(axises[0], -10., 0.);
+
+  axises[1] = mh_axis_create(4, MH_AXIS_OPT_VARBINS);
+  mh_axis_init(axises[1], -13., 10000.);
+  axises[1]->bins[0] = -13.;
+  axises[1]->bins[1] = 130.;
+  axises[1]->bins[2] = 1300.;
+  axises[1]->bins[3] = 1500.;
+  axises[1]->bins[4] = 10000.;
+
+  axises[2] = mh_axis_create(2, MH_AXIS_OPT_FIXEDBINS);
+  mh_axis_init(axises[2], 0., 1.);
+
+  axises[3] = mh_axis_create(3, MH_AXIS_OPT_FIXEDBINS);
+  mh_axis_init(axises[2], 0.1, 1.1);
+
+  if (do_clone) {
+    h = mh_hist_create(ndim, axises);
+    htmp = mh_hist_clone(h, 1);
+    mh_hist_free(h);
+    h = htmp;
+  }
+
+  /* choose coords, check bin content == 0, then fill and recheck */
+  c = malloc(sizeof(double) * 4);
+  w = malloc(sizeof(double) * 1);
+  c[0] = 0.; c[1] = 0.; c[2] = 0.; c[3] = 1.;
+  mh_hist_find_bin_numbers(h, c, dim_bins);
+  is_double_m(1.e-9, mh_hist_get_bin_content(h, dim_bins), 0., "bin is zero to boot");
+  mh_hist_fill(h, c);
+  is_double_m(1.e-9, mh_hist_get_bin_content(h, dim_bins), 1., "bin is one after fill");
+  mh_hist_fill_w(h, c, 0.1);
+  is_double_m(1.e-9, mh_hist_get_bin_content(h, dim_bins), 1.1, "bin is 1.1 after wfill");
+  mh_hist_fill_n(h, 1, &c);
+  is_double_m(1.e-9, mh_hist_get_bin_content(h, dim_bins), 2.1, "bin is 2.1 after nfill");
+  *w = 12.3;
+  mh_hist_fill_nw(h, 1, &c, w);
+  is_double_m(1.e-9, mh_hist_get_bin_content(h, dim_bins), 14.4, "bin is 14.3 after nwfill");
+
+  free(c);
+  free(w);
+  mh_hist_free(h);
+}
+
+
+
+mh_histogram_t *
+histogram_clone_dance(mh_histogram_t *input)
+{
+  mh_histogram_t *cl = mh_hist_clone(input, 0);
+  mh_hist_free(input);
+  input = mh_hist_clone(cl, 1);
+  mh_hist_free(cl);
+  return input;
+}
+
+
