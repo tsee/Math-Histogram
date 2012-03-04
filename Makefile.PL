@@ -28,14 +28,14 @@ elsif ($USE_VALGRIND or $USE_GDB) {
 }
 
 if (not $DEBUG) {
-  $DEBUG .= ' -O2';
+  $define .= ' -O2';
 }
 else {
   if ($DEBUG) {
     $define .= ' -Wall -Wextra -O0 -ggdb -DDEBUG';
   }
   if ($DEBUG > 1) {
-    $define .= ' -pedantic -Wno-long-long -finstrument-functions';
+    $define .= ' -pedantic';
   }
 }
 
