@@ -162,7 +162,7 @@ MODULE = Math::Histogram    PACKAGE = Math::Histogram
 
 
 mh_histogram_t *
-mh_histogram_t::new(unsigned int ndim, AV *axises)
+mh_histogram_t::new(AV *axises)
   PREINIT:
     mh_axis_t ** *axis_structs = NULL;
     mh_axis_t *tmp_axis;
@@ -181,7 +181,7 @@ mh_histogram_t::new(unsigned int ndim, AV *axises)
         MH_AXIS_USERDATA(tmp_axis) = INT2PTR(void *, flags);
       }
     }
-    RETVAL = mh_hist_create(ndim, *axis_structs);
+    RETVAL = mh_hist_create(n, *axis_structs);
   OUTPUT: RETVAL
 
 
