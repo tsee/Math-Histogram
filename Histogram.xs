@@ -23,6 +23,16 @@
       } \
     } STMT_END
 
+
+/* The following are flags that we use on the userdata slot of an axis.
+ * Right now, that's just using the first bit (take care not to use more than 32...)
+ * indicating that if set, the axis is owned by a histogram. If that's the case,
+ * using that axis in another histogram will create a clone of the axis.
+ * At the same time, any explicit Perl-level reference to the axis will not free
+ * the underlying C object if that bit is set as the Perl-level reference goes out of
+ * scope. */
+#define F_AXIS_OWNED_BY_HIST 1
+
 MODULE = Math::Histogram    PACKAGE = Math::Histogram
 
 REQUIRE: 2.21
@@ -66,7 +76,9 @@ mh_axis_t::new(...)
 void
 mh_axis_t::DESTROY()
   CODE:
-    mh_axis_free(THIS);
+    /* free only if not owned by some histogram */
+    if (!( PTR2UV(MH_AXIS_USERDATA(THIS)) & F_AXIS_OWNED_BY_HIST ))
+      mh_axis_free(THIS);
 
 
 mh_axis_t *
@@ -152,9 +164,26 @@ MODULE = Math::Histogram    PACKAGE = Math::Histogram
 
 
 mh_histogram_t *
-mh_histogram_t::new(...)
+mh_histogram_t::new(unsigned int ndim, AV *axises)
+  PREINIT:
+    mh_axis_t ** *axis_structs = NULL;
+    mh_axis_t *tmp_axis;
+    unsigned int i, n;
   CODE:
-    RETVAL = mh_hist_create(0, NULL);
+    n = av_len(axises)+1;
+    av_to_axis_ary(aTHX_ axises, n, axis_structs);
+    for (i = 0; i < n; ++i) {
+      tmp_axis = (*axis_structs)[i];
+      /* Clone axis if owned by histogram, otherwise set the "ownership" bit */
+      if (PTR2UV(MH_AXIS_USERDATA(tmp_axis)) & F_AXIS_OWNED_BY_HIST)
+        (*axis_structs)[i] = mh_axis_clone(tmp_axis);
+      else {
+        UV flags = PTR2UV(MH_AXIS_USERDATA(tmp_axis));
+        flags |= F_AXIS_OWNED_BY_HIST;
+        MH_AXIS_USERDATA(tmp_axis) = INT2PTR(void *, flags);
+      }
+    }
+    RETVAL = mh_hist_create(ndim, *axis_structs);
   OUTPUT: RETVAL
 
 

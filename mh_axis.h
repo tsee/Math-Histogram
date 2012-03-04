@@ -12,6 +12,9 @@ typedef struct mh_axis {
 
   /* Exists with nbins+1 elements if we do not have constant binsize, NULL otherwise */
   double *bins;
+
+  /* sue me, makes my life a helluvalot easier */
+  void *userdata;
 } mh_axis_t;
 
 /* Returns whether or not a given axis struct has variable bin sizes */
@@ -71,5 +74,7 @@ unsigned int mh_axis_find_bin(mh_axis_t *axis, double x);
 #define MH_AXIS_FIND_BIN_FIX(a, x) ( ((x)-(a)->min) / MH_AXIS_BINSIZE_FIX(a) )
 /* variable bin size bin finder, O(log N) */
 unsigned int mh_axis_find_bin_var(mh_axis_t *axis, double x);
+
+#define MH_AXIS_USERDATA(a) (a)->userdata
 
 #endif

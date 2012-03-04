@@ -9,6 +9,8 @@ our $VERSION = '1.00';
 require XSLoader;
 XSLoader::load('Math::Histogram', $VERSION);
 
+require Math::Histogram::Axis;
+
 require Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(

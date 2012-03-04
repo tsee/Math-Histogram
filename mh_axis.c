@@ -24,6 +24,8 @@ mh_axis_create(unsigned int nbins, unsigned short have_varbins)
     axis->bins = NULL;
   }
 
+  axis->userdata = NULL;
+
   return axis;
 }
 
@@ -52,6 +54,7 @@ mh_axis_clone(mh_axis_t *axis_proto)
   axis_out->width = axis_proto->width;
   axis_out->min = axis_proto->min;
   axis_out->max = axis_proto->max;
+  axis_out->userdata = axis_proto->userdata;
 
   return axis_out;
 }
