@@ -21,9 +21,12 @@ foreach my $ax (@ax) {
     foreach my $ibin (0, 5) {
       my $res = eval {$ax->$dying_method($ibin); 1};
       ok(!$res && $@ =~ /\boutside axis bin range\b/);
-
     }
   }
+
+  is_approx($ax->min, 1.1, "$desc: min");
+  is_approx($ax->max, 2.1, "$desc: max");
+  is_approx($ax->width, $ax->max - $ax->min, "$desc: width");
 
   foreach my $ibin (0..3) {
     my $lower = $bins->[$ibin];
@@ -34,6 +37,10 @@ foreach my $ax (@ax) {
     is_approx($ax->lower_boundary($ibin+1), $lower, "$desc, $ibin: lower bin boundary");
     is_approx($ax->upper_boundary($ibin+1), $upper, "$desc, $ibin: upper bin boundary");
     is_approx($ax->bin_center($ibin+1), $center, "$desc, $ibin: bin center");
+
+    is($ax->find_bin($lower), $ibin+1, "$desc, $ibin: found lower bin boundary");
+    is($ax->find_bin($center), $ibin+1, "$desc, $ibin: found bin center");
+    is($ax->find_bin($upper), $ibin+2, "$desc, $ibin: found upper bin boundary");
   }
 }
 
