@@ -49,10 +49,10 @@ run_tests(int do_clone)
   mh_axis_init(axises[2], 0., 1.);
 
   axises[3] = mh_axis_create(3, MH_AXIS_OPT_FIXEDBINS);
-  mh_axis_init(axises[2], 0.1, 1.1);
+  mh_axis_init(axises[3], 0.1, 1.1);
 
+  h = mh_hist_create(ndim, axises);
   if (do_clone) {
-    h = mh_hist_create(ndim, axises);
     htmp = mh_hist_clone(h, 1);
     mh_hist_free(h);
     h = htmp;

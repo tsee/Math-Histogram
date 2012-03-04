@@ -5,7 +5,7 @@ BEGIN {
 }
 use Math::Histogram::Test;
 
-run_ctest('300histofill')
+run_ctest('210histofill')
   or Test::More->import(skip_all => "C executable not found");
 
 

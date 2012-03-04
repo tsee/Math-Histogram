@@ -56,14 +56,14 @@ mh_hist_clone(mh_histogram_t *hist_proto, int do_copy_data)
     return NULL;
   hist->ndim = MH_HIST_NDIM(hist_proto);
 
-  hist->bin_buffer = malloc(sizeof(unsigned int) * MH_HIST_NDIM(hist));
+  hist->bin_buffer = malloc(sizeof(unsigned int) * MH_HIST_NDIM(hist) * 2);
   if (hist->bin_buffer == NULL) {
     free(hist);
     return NULL;
   }
 
   /* share the alloc/free */
-  hist->arg_bin_buffer = &hist->bin_buffer[MH_HIST_NDIM(hist)];
+  hist->arg_bin_buffer = &(hist->bin_buffer[MH_HIST_NDIM(hist)]);
 
 
   hist->axises = malloc(sizeof(mh_axis_t *) * MH_HIST_NDIM(hist));
@@ -171,7 +171,7 @@ mh_hist_find_bin_numbers(mh_histogram_t *hist, double coord[], unsigned int bin[
 {
   const unsigned int ndim = MH_HIST_NDIM(hist);
   unsigned int i;
-  mh_axis_t **axises = hist->axises;;
+  mh_axis_t **axises = hist->axises;
   for (i = 0; i < ndim; ++i) {
     bin[i] = mh_axis_find_bin(axises[i], coord[i]);
   }
