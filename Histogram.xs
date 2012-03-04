@@ -59,7 +59,7 @@ mh_axis_t::new(...)
         croak("Cannot create Math::Histogram::Axis! Invalid bin number or out of memory.");
 
       av_to_double_ary(aTHX_ bins, RETVAL->bins);
-      mh_axis_init( RETVAL, RETVAL->bins[0], RETVAL->bins[n] );
+      mh_axis_init( RETVAL, RETVAL->bins[0], RETVAL->bins[n-1] );
     }
     /* fixbins => n, min, max */
     else if (items == 4) {
