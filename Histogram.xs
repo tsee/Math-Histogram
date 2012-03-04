@@ -9,6 +9,20 @@
 
 #include "mh_histogram.h"
 
+#define ASSERT_UPPER_BIN_RANGE(axis, ibin) \
+    STMT_START { \
+      if (ibin > MH_AXIS_NBINS(axis)+1) { \
+        croak("Bin %u outside axis bin range (min: 0, max: %u)", ibin, MH_AXIS_NBINS(axis)+1); \
+      } \
+    } STMT_END
+
+#define ASSERT_BIN_RANGE(axis, ibin) \
+    STMT_START { \
+      if (ibin < 0 || ibin > MH_AXIS_NBINS(axis)+1) { \
+        croak("Bin %u outside axis bin range (min: 0, max: %u)", ibin, MH_AXIS_NBINS(axis)+1); \
+      } \
+    } STMT_END
+
 MODULE = Math::Histogram    PACKAGE = Math::Histogram
 
 REQUIRE: 2.21
@@ -22,7 +36,7 @@ mh_axis_t::new(...)
     AV *bins;
     I32 n;
   CODE:
-    /* varbins => just arrayref */
+    /* varbins => just a single arrayref */
     if (items == 2) {
       tmp = ST(1);
       DEREF_RV_TO_AV(bins, tmp);
@@ -53,6 +67,83 @@ void
 mh_axis_t::DESTROY()
   CODE:
     mh_axis_free(THIS);
+
+
+mh_axis_t *
+mh_axis_t::clone()
+  PREINIT:
+    const char *CLASS = "Math::Histogram::Axis"; /* hack around deficient typemap */
+  CODE:
+    RETVAL = mh_axis_clone(THIS);
+  OUTPUT: RETVAL
+
+
+unsigned int
+mh_axis_t::nbins()
+  CODE:
+    RETVAL = MH_AXIS_NBINS(THIS);
+  OUTPUT: RETVAL
+
+
+double
+mh_axis_t::min()
+  CODE:
+    RETVAL = MH_AXIS_MIN(THIS);
+  OUTPUT: RETVAL
+
+
+double
+mh_axis_t::max()
+  CODE:
+    RETVAL = MH_AXIS_MAX(THIS);
+  OUTPUT: RETVAL
+
+
+double
+mh_axis_t::width()
+  CODE:
+    RETVAL = MH_AXIS_WIDTH(THIS);
+  OUTPUT: RETVAL
+
+
+
+double
+mh_axis_t::binsize(unsigned int ibin = 0)
+  CODE:
+    ASSERT_UPPER_BIN_RANGE(THIS, ibin);
+    RETVAL = MH_AXIS_BINSIZE(THIS, ibin);
+  OUTPUT: RETVAL
+
+
+double
+mh_axis_t::lower_boundary(unsigned int ibin = 0)
+  CODE:
+    ASSERT_UPPER_BIN_RANGE(THIS, ibin);
+    RETVAL = MH_AXIS_BIN_LOWER(THIS, ibin);
+  OUTPUT: RETVAL
+
+
+double
+mh_axis_t::upper_boundary(unsigned int ibin = 0)
+  CODE:
+    ASSERT_UPPER_BIN_RANGE(THIS, ibin);
+    RETVAL = MH_AXIS_BIN_UPPER(THIS, ibin);
+  OUTPUT: RETVAL
+
+
+double
+mh_axis_t::bin_center(unsigned int ibin = 0)
+  CODE:
+    ASSERT_UPPER_BIN_RANGE(THIS, ibin);
+    RETVAL = MH_AXIS_BIN_CENTER(THIS, ibin);
+  OUTPUT: RETVAL
+
+
+unsigned int
+mh_axis_t::find_bin(double x)
+  CODE:
+    RETVAL = mh_axis_find_bin(THIS, x);
+  OUTPUT: RETVAL
 
 
 
