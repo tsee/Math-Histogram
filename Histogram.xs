@@ -164,24 +164,30 @@ MODULE = Math::Histogram    PACKAGE = Math::Histogram
 mh_histogram_t *
 mh_histogram_t::new(AV *axises)
   PREINIT:
-    mh_axis_t ** *axis_structs = NULL;
+    mh_axis_t **axis_structs;
     mh_axis_t *tmp_axis;
     unsigned int i, n;
   CODE:
     n = av_len(axises)+1;
-    av_to_axis_ary(aTHX_ axises, n, axis_structs);
+    if (n == 0)
+      croak("Need array reference of axis objetcs");
+    axis_structs = av_to_axis_ary(aTHX_ axises, n);
+    if (axis_structs == NULL)
+      croak("Need array reference of axis objetcs");
+
     for (i = 0; i < n; ++i) {
-      tmp_axis = (*axis_structs)[i];
+      tmp_axis = axis_structs[i];
       /* Clone axis if owned by histogram, otherwise set the "ownership" bit */
       if (PTR2UV(MH_AXIS_USERDATA(tmp_axis)) & F_AXIS_OWNED_BY_HIST)
-        (*axis_structs)[i] = mh_axis_clone(tmp_axis);
+        axis_structs[i] = mh_axis_clone(tmp_axis);
       else {
         UV flags = PTR2UV(MH_AXIS_USERDATA(tmp_axis));
         flags |= F_AXIS_OWNED_BY_HIST;
         MH_AXIS_USERDATA(tmp_axis) = INT2PTR(void *, flags);
       }
     }
-    RETVAL = mh_hist_create(n, *axis_structs);
+
+    RETVAL = mh_hist_create(n, axis_structs);
   OUTPUT: RETVAL
 
 
