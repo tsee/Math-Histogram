@@ -14,11 +14,18 @@ require Math::Histogram::Axis;
 require Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(
+  make_histogram
 );
 
 our %EXPORT_TAGS = (
   'all' => \@EXPORT_OK,
 );
+
+sub make_histogram {
+  my @axises = map Math::Histogram::Axis->new(@$_), @_;
+  return Math::Histogram->new(\@axises);
+}
+
 
 1;
 __END__
