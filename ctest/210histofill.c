@@ -32,7 +32,6 @@ run_tests(int do_clone)
   double *c;
   unsigned int dim_bins[4];
   const unsigned int ndim = 4;
-  unsigned int i;
   
   axises[0] = mh_axis_create(3, MH_AXIS_OPT_FIXEDBINS);
   mh_axis_init(axises[0], -10., 0.);
