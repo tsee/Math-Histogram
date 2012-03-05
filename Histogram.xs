@@ -201,3 +201,27 @@ mh_histogram_t::DESTROY()
   CODE:
     mh_hist_free(THIS);
 
+mh_histogram_t *
+mh_histogram_t::clone()
+  PREINIT:
+    const char *CLASS = "Math::Histogram";
+  CODE:
+    RETVAL = mh_hist_clone(THIS, 1); /* 1 => do clone data */
+  OUTPUT: RETVAL
+
+mh_histogram_t *
+mh_histogram_t::new_alike()
+  PREINIT:
+    const char *CLASS = "Math::Histogram";
+  CODE:
+    RETVAL = mh_hist_clone(THIS, 0); /* 0 => do NOT clone data */
+  OUTPUT: RETVAL
+
+mh_axis_t *
+mh_histogram_t::get_axis(unsigned int dimension)
+  PREINIT:
+    const char *CLASS = "Math::Histogram::Axis";
+  CODE:
+    RETVAL = MH_HIST_AXIS(THIS, dimension);
+  OUTPUT: RETVAL
+
