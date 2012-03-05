@@ -31,6 +31,11 @@
  * scope. */
 #define F_AXIS_OWNED_BY_HIST 1
 
+/*
+ * FIXME This file has a bunch of hardcoded class names for non-constructor methods
+ *       that return objects. That needs to be fixed!
+ */
+
 MODULE = Math::Histogram    PACKAGE = Math::Histogram
 
 REQUIRE: 2.21
