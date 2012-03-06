@@ -2,6 +2,10 @@ use strict;
 use warnings;
 use Math::Histogram;
 use Test::More;
+use File::Spec;
+
+BEGIN { push @INC, -d "t" ? File::Spec->catdir(qw(t lib)) : "lib"; }
+use Math::Histogram::Test;
 
 my $bins = [1.1, 1.35, 1.6, 1.85, 2.1];
 my @ax = (Math::Histogram::Axis->new(4, 1.1, 2.1),
@@ -47,16 +51,3 @@ foreach my $ax (@ax) {
 
 done_testing();
 
-sub is_approx {
-  my ($l, $r, $m) = @_;
-  my $is_undef = !defined($l) || !defined($r);
-  $l = "<undef>" if not defined $l;
-  $r = "<undef>" if not defined $r;
-  ok(
-    !$is_undef
-    && $l+1e-15 > $r
-    && $l-1e-15 < $r,
-    $m
-  )
-  or note("'$m' failed: $l != $r");
-}
