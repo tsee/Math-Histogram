@@ -225,3 +225,22 @@ mh_histogram_t::get_axis(unsigned int dimension)
     RETVAL = MH_HIST_AXIS(THIS, dimension);
   OUTPUT: RETVAL
 
+unsigned int
+mh_histogram_t::ndim()
+  CODE:
+    RETVAL = MH_HIST_NDIM(THIS);
+  OUTPUT: RETVAL
+
+unsigned int
+mh_histogram_t::nfills()
+  CODE:
+    RETVAL = MH_HIST_NFILLS(THIS);
+  OUTPUT: RETVAL
+
+double
+mh_histogram_t::total()
+  CODE:
+    RETVAL = MH_HIST_TOTAL(THIS);
+  OUTPUT: RETVAL
+
+

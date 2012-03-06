@@ -22,6 +22,10 @@ sub test_histogram {
   isa_ok($h, 'Math::Histogram');
 
   test_hist_axises($h, $specs);
+
+  is($h->ndim, 3, "ndim");
+  is($h->nfills, 0, "nfills");
+  is_approx($h->total, 0., "total");
 }
 
 sub test_hist_axises {
