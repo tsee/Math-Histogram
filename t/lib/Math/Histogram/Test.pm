@@ -10,7 +10,7 @@ use Exporter ();
 use Test::More;
 
 our @ISA = qw(Exporter);
-our @EXPORT = qw(run_ctest);
+our @EXPORT = qw(run_ctest is_approx axis_eq);
 
 our ($USE_VALGRIND, $USE_GDB);
 
@@ -67,6 +67,47 @@ sub run_ctest {
   #print $stdout;
   #warn $stderr if defined $stderr and $stderr ne '';
   return 1;
+}
+
+sub is_approx {
+  my ($l, $r, $m) = @_;
+  my $is_undef = !defined($l) || !defined($r);
+  $l = "<undef>" if not defined $l;
+  $r = "<undef>" if not defined $r;
+  my $ok = ok(
+    !$is_undef
+    && $l+1e-15 > $r
+    && $l-1e-15 < $r,
+    $m
+  );
+  note("'$m' failed: $l != $r") if not $ok;
+  return $ok;
+}
+
+sub axis_eq {
+  my ($t, $ref, $name) = @_;
+  isa_ok($t, 'Math::Histogram::Axis');
+
+  is_approx($t->min, $ref->min, "$name: min");
+  is_approx($t->max, $ref->max, "$name: max");
+  is_approx($t->width, $ref->width, "$name: width");
+
+  is($t->nbins, $ref->nbins, "$name: nbins")
+    or return; # short circuit if nbins differs
+
+  my $n = $ref->nbins;
+  for my $ibin (1..$n) {
+    is_approx($t->binsize($ibin), $ref->binsize($ibin), "$name, $ibin: binsize");
+    is_approx($t->lower_boundary($ibin), $ref->lower_boundary($ibin), "$name, $ibin: lower_boundary");
+    is_approx($t->upper_boundary($ibin), $ref->upper_boundary($ibin), "$name, $ibin: upper_boundary");
+    is_approx($t->bin_center($ibin), $ref->bin_center($ibin), "$name, $ibin: bin_center");
+    my ($lower, $center, $upper) = map $ref->$_($ibin), qw(lower_boundary bin_center upper_boundary);
+
+    is($t->find_bin($lower), $ibin, "$name, $ibin: found lower bin boundary");
+    is($t->find_bin($center), $ibin, "$name, $ibin: found bin center");
+    is($t->find_bin($upper), $ibin+1, "$name, $ibin: found upper bin boundary");
+  }
+
 }
 
 1;
