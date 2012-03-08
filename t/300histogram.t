@@ -27,7 +27,7 @@ sub test_histogram {
   is($h->nfills, 0, "nfills");
   is_approx($h->total, 0., "total");
 
-  my @tests = (
+  my @test_bins = (
     { in   => [0., 0., 1.],
       out  => [1, 1, 1],
       name => "start of first bins" },
@@ -53,7 +53,7 @@ sub test_histogram {
       out  => [0, 0, 0],
       name => "barely underflow" },
   );
-  foreach my $t (@tests) {
+  foreach my $t (@test_bins) {
     my $b = $h->find_bin_numbers($t->{in});
     is_deeply($b, $t->{out}, "Finding bins tests: $t->{name}");
   }
