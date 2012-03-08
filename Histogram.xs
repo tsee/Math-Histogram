@@ -434,3 +434,21 @@ mh_histogram_t::fill_bin_nw(dim_bin_nums, weights)
               "at that point!", i);
     }
 
+
+double
+mh_histogram_t::get_bin_content(dim_bin_nums)
+    AV *dim_bin_nums;
+  CODE:
+    av_to_unsigned_int_ary(aTHX_ dim_bin_nums, MH_HIST_ARG_BIN_BUFFER(THIS));
+    RETVAL = mh_hist_get_bin_content(THIS, MH_HIST_ARG_BIN_BUFFER(THIS));
+  OUTPUT: RETVAL
+
+
+void
+mh_histogram_t::set_bin_content(dim_bin_nums, content)
+    AV *dim_bin_nums;
+    double content;
+  CODE:
+    av_to_unsigned_int_ary(aTHX_ dim_bin_nums, MH_HIST_ARG_BIN_BUFFER(THIS));
+    mh_hist_set_bin_content(THIS, MH_HIST_ARG_BIN_BUFFER(THIS), content);
+
