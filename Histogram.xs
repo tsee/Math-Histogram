@@ -243,4 +243,12 @@ mh_histogram_t::total()
     RETVAL = MH_HIST_TOTAL(THIS);
   OUTPUT: RETVAL
 
-
+AV *
+mh_histogram_t::find_bin_numbers(coords)
+    AV *coords;
+  CODE:
+    av_to_double_ary(aTHX_ coords, MH_HIST_ARG_COORD_BUFFER(THIS));
+    mh_hist_find_bin_numbers(THIS, MH_HIST_ARG_COORD_BUFFER(THIS), MH_HIST_ARG_BIN_BUFFER(THIS));
+    unsigned_int_ary_to_av(aTHX_ MH_HIST_NDIM(THIS), MH_HIST_ARG_BIN_BUFFER(THIS), &RETVAL);
+    sv_2mortal((SV*)RETVAL);
+  OUTPUT: RETVAL

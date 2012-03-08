@@ -32,6 +32,16 @@ av_to_double_ary(pTHX_ AV *in, double *out)
   }
 }
 
+STATIC void
+unsigned_int_ary_to_av(pTHX_ unsigned int n, unsigned int *in, AV **out)
+{
+  unsigned int i;
+  *out = newAV();
+  av_fill(*out, n-1);
+  for (i = 0; i < n; ++i) {
+    av_store(*out, i, newSVuv(in[i]));
+  }
+}
 
 STATIC mh_axis_t **
 av_to_axis_ary(pTHX_ AV *in, I32 n)
