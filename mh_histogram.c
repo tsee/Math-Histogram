@@ -22,9 +22,18 @@ mh_hist_create(unsigned short ndim, mh_axis_t **axises)
   /* share the alloc/free */
   hist->arg_bin_buffer = &hist->bin_buffer[ndim];
 
+  hist->arg_coord_buffer = malloc(sizeof(double) * ndim);
+  if (hist->arg_coord_buffer == NULL) {
+    free(hist);
+    free(hist->bin_buffer);
+    return NULL;
+  }
+
+
   hist->axises = malloc(sizeof(mh_axis_t *) * ndim);
   if (hist->axises == NULL) {
     free(hist->bin_buffer);
+    free(hist->arg_coord_buffer);
     free(hist);
     return NULL;
   }
@@ -36,6 +45,7 @@ mh_hist_create(unsigned short ndim, mh_axis_t **axises)
   if (hist->data == NULL) {
     free(hist->bin_buffer);
     free(hist->axises);
+    free(hist->arg_coord_buffer);
     free(hist);
     return NULL;
   }
@@ -65,10 +75,18 @@ mh_hist_clone(mh_histogram_t *hist_proto, int do_copy_data)
   /* share the alloc/free */
   hist->arg_bin_buffer = &(hist->bin_buffer[MH_HIST_NDIM(hist)]);
 
+  hist->arg_coord_buffer = malloc(sizeof(double) * hist->ndim);
+  if (hist->arg_coord_buffer == NULL) {
+    free(hist->bin_buffer);
+    free(hist->arg_coord_buffer);
+    free(hist);
+    return NULL;
+  }
 
   hist->axises = malloc(sizeof(mh_axis_t *) * MH_HIST_NDIM(hist));
   if (hist->axises == NULL) {
     free(hist->bin_buffer);
+    free(hist->arg_coord_buffer);
     free(hist);
     return NULL;
   }
@@ -80,6 +98,7 @@ mh_hist_clone(mh_histogram_t *hist_proto, int do_copy_data)
     hist->data = (double *)malloc(nbins * sizeof(double));
     if (hist->data == NULL) {
       free(hist->bin_buffer);
+      free(hist->arg_coord_buffer);
       free(hist->axises);
       free(hist);
       return NULL;
@@ -94,6 +113,7 @@ mh_hist_clone(mh_histogram_t *hist_proto, int do_copy_data)
     hist->data = (double *)calloc(nbins, sizeof(double));
     if (hist->data == NULL) {
       free(hist->bin_buffer);
+      free(hist->arg_coord_buffer);
       free(hist->axises);
       free(hist);
       return NULL;
@@ -116,6 +136,7 @@ mh_hist_free(mh_histogram_t *hist)
     mh_axis_free(axises[i]);
 
   free(hist->bin_buffer); /* frees arg_bin_buffer as well */
+  free(hist->arg_coord_buffer);
   free(hist->axises);
   free(hist->data);
   free(hist);

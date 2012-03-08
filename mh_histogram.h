@@ -21,6 +21,7 @@ typedef struct mh_histogram {
   unsigned int *bin_buffer; /* purely internal! */
   /* May be used for passing ndim arguments to mh_hist_ functions only, see MH_HIST_ARG_BIN_BUFFER */
   unsigned int *arg_bin_buffer;
+  double *arg_coord_buffer;
 } mh_histogram_t;
 
 #define MH_HIST_NDIM(h) ((h)->ndim)
@@ -35,6 +36,8 @@ typedef struct mh_histogram {
  * way then to save a malloc/free pair (due to the dynamic nature of the
  * number of dimensions in a histogram) when calling an API function! */
 #define MH_HIST_ARG_BIN_BUFFER(h) ((h)->arg_bin_buffer)
+/* Same as MH_HIST_ARG_BIN_BUFFER, but for coordinates (IOW doubles) */
+#define MH_HIST_ARG_COORD_BUFFER(h) ((h)->arg_coord_buffer)
 
 /*
  *
