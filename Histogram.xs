@@ -201,6 +201,7 @@ mh_histogram_t::DESTROY()
   CODE:
     mh_hist_free(THIS);
 
+
 mh_histogram_t *
 mh_histogram_t::clone()
   PREINIT:
@@ -208,6 +209,7 @@ mh_histogram_t::clone()
   CODE:
     RETVAL = mh_hist_clone(THIS, 1); /* 1 => do clone data */
   OUTPUT: RETVAL
+
 
 mh_histogram_t *
 mh_histogram_t::new_alike()
@@ -217,6 +219,7 @@ mh_histogram_t::new_alike()
     RETVAL = mh_hist_clone(THIS, 0); /* 0 => do NOT clone data */
   OUTPUT: RETVAL
 
+
 mh_axis_t *
 mh_histogram_t::get_axis(unsigned int dimension)
   PREINIT:
@@ -225,11 +228,13 @@ mh_histogram_t::get_axis(unsigned int dimension)
     RETVAL = MH_HIST_AXIS(THIS, dimension);
   OUTPUT: RETVAL
 
+
 unsigned int
 mh_histogram_t::ndim()
   CODE:
     RETVAL = MH_HIST_NDIM(THIS);
   OUTPUT: RETVAL
+
 
 unsigned int
 mh_histogram_t::nfills()
@@ -237,11 +242,13 @@ mh_histogram_t::nfills()
     RETVAL = MH_HIST_NFILLS(THIS);
   OUTPUT: RETVAL
 
+
 double
 mh_histogram_t::total()
   CODE:
     RETVAL = MH_HIST_TOTAL(THIS);
   OUTPUT: RETVAL
+
 
 AV *
 mh_histogram_t::find_bin_numbers(coords)
@@ -252,3 +259,91 @@ mh_histogram_t::find_bin_numbers(coords)
     unsigned_int_ary_to_av(aTHX_ MH_HIST_NDIM(THIS), MH_HIST_ARG_BIN_BUFFER(THIS), &RETVAL);
     sv_2mortal((SV*)RETVAL);
   OUTPUT: RETVAL
+
+
+void
+mh_histogram_t::fill(coords)
+    AV *coords;
+  CODE:
+    av_to_double_ary(aTHX_ coords, MH_HIST_ARG_COORD_BUFFER(THIS));
+    mh_hist_fill(THIS, MH_HIST_ARG_COORD_BUFFER(THIS));
+
+
+void
+mh_histogram_t::fill_w(coords, weight)
+    AV *coords;
+    double weight;
+  CODE:
+    av_to_double_ary(aTHX_ coords, MH_HIST_ARG_COORD_BUFFER(THIS));
+    mh_hist_fill_w(THIS, MH_HIST_ARG_COORD_BUFFER(THIS), weight);
+
+
+void
+mh_histogram_t::fill_n(coords)
+    AV *coords;
+  PREINIT:
+    SV **elem;
+    SV *sv;
+    unsigned int i, n;
+  CODE:
+    n = av_len(coords)+1;
+    /* Fill each individually since we have
+     * to do lots of Perl => C conversion anyway */
+    for (i = 0; i < n; ++i) {
+      elem = av_fetch(coords, i, 0);
+      if (elem == NULL)
+        croak("Woah, this should never happen!");
+
+      /* Inner array deref */
+      sv = *elem;
+      SvGETMAGIC(sv);
+      if (SvROK(sv) && SvTYPE(SvRV(sv)) == SVt_PVAV) {
+        av_to_double_ary(aTHX_ (AV*)SvRV(sv), MH_HIST_ARG_COORD_BUFFER(THIS));
+        mh_hist_fill(THIS, MH_HIST_ARG_COORD_BUFFER(THIS));
+      }
+      else
+        croak("Element with index %u of input array reference is "
+              "not an array reference, stopping histogram filling "
+              "at that point!", i);
+    }
+
+
+void
+mh_histogram_t::fill_nw(coords, weights)
+    AV *coords;
+    AV *weights;
+  PREINIT:
+    SV **elem;
+    SV *sv;
+    unsigned int i, n;
+    double weight;
+  CODE:
+    n = av_len(coords)+1;
+    if ((unsigned int)(av_len(weights)+1) != n)
+      croak("Coordinates and weights arrays need to be of same size!");
+
+    /* Fill each individually since we have
+     * to do lots of Perl => C conversion anyway */
+    for (i = 0; i < n; ++i) {
+      elem = av_fetch(weights, i, 0);
+      if (elem == NULL)
+        croak("Woah, this should never happen!");
+      weight = SvNV(*elem);
+
+      elem = av_fetch(coords, i, 0);
+      if (elem == NULL)
+        croak("Woah, this should never happen!");
+
+      /* Inner array deref */
+      sv = *elem;
+      SvGETMAGIC(sv);
+      if (SvROK(sv) && SvTYPE(SvRV(sv)) == SVt_PVAV) {
+        av_to_double_ary(aTHX_ (AV*)SvRV(sv), MH_HIST_ARG_COORD_BUFFER(THIS));
+        mh_hist_fill_w(THIS, MH_HIST_ARG_COORD_BUFFER(THIS), weight);
+      }
+      else
+        croak("Element with index %u of input array reference is "
+              "not an array reference, stopping histogram filling "
+              "at that point!", i);
+    }
+
