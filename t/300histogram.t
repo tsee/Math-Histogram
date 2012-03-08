@@ -26,6 +26,37 @@ sub test_histogram {
   is($h->ndim, 3, "ndim");
   is($h->nfills, 0, "nfills");
   is_approx($h->total, 0., "total");
+
+  my @tests = (
+    { in   => [0., 0., 1.],
+      out  => [1, 1, 1],
+      name => "start of first bins" },
+    { in   => [0.49, 1/100-1e-6, 1.999],
+      out  => [1, 1, 1],
+      name => "end of first bins" },
+    { in   => [0.5, 1/100, 2],
+      out  => [2, 2, 2],
+      name => "lower bound of second bin" },
+    { in   => [1.-1e-9, 1.-1e-9, 5-1e-9],
+      out  => [2, 100, 4],
+      name => "almost upper bound of last bin" },
+    { in   => [1000., 100., 500],
+      out  => [3, 101, 5],
+      name => "overflow" },
+    { in   => [1., 1., 5],
+      out  => [3, 101, 5],
+      name => "barely overflow" },
+    { in   => [-1., -0.1, 0.],
+      out  => [0, 0, 0],
+      name => "underflow" },
+    { in   => [-1e-9, -1e-9, 1.-1e-9],
+      out  => [0, 0, 0],
+      name => "barely underflow" },
+  );
+  foreach my $t (@tests) {
+    my $b = $h->find_bin_numbers($t->{in});
+    is_deeply($b, $t->{out}, "Finding bins tests: $t->{name}");
+  }
 }
 
 sub test_hist_axises {
