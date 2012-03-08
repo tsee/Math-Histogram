@@ -27,6 +27,9 @@ sub test_histogram {
   is($h->nfills, 0, "nfills");
   is_approx($h->total, 0., "total");
 
+  my @test_fills = (
+    1, 2.1, -100., 10000, 1, 0., 1
+  );
   my @test_bins = (
     { in   => [0., 0., 1.],
       out  => [1, 1, 1],
@@ -54,9 +57,42 @@ sub test_histogram {
       name => "barely underflow" },
   );
   foreach my $t (@test_bins) {
-    my $b = $h->find_bin_numbers($t->{in});
+    my $coords = $t->{in};
+    my $b = $h->find_bin_numbers($coords);
     is_deeply($b, $t->{out}, "Finding bins tests: $t->{name}");
-  }
+
+    foreach my $bin_or_coord ([qw(fill), $coords], [qw(fill_bin), $b]) {
+      my $fill_method = $bin_or_coord->[0];
+      my $fill_w_method = $fill_method . "_w";
+      my $location = $bin_or_coord->[1];
+
+      my $nfills = $h->nfills;
+      my $total = $h->total;
+      my $total_before = $h->total;
+      is($h->get_bin_content($b), 0., "assert that initial bin is empty");
+      my $content = $h->get_bin_content($b);
+      foreach my $fill_amount (@test_fills) {
+        note("Testing for fill $fill_amount...");
+        if ($fill_amount == 1) {
+          $h->$fill_method($location);
+          ++$nfills; $total += $fill_amount;
+          $content += $fill_amount;
+          is($h->get_bin_content($b), $content, "check content after fill");
+          is($h->total, $total, "check total");
+          is($h->nfills, $nfills, "check nfills");
+        }
+
+        $h->$fill_w_method($location, $fill_amount);
+        ++$nfills; $total += $fill_amount;
+        $content += $fill_amount;
+        is($h->get_bin_content($b), $content, "check content after fill_w");
+        is($h->total, $total, "check total");
+        is($h->nfills, $nfills, "check nfills");
+      }
+      $h->set_bin_content($b, 0.);
+      is($h->total, $total_before, "check total back to normal");
+    }
+  } # foreach test bin
 }
 
 sub test_hist_axises {
