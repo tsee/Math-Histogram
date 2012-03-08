@@ -346,7 +346,7 @@ mh_hist_set_bin_content(mh_histogram_t *hist, unsigned int dim_bins[], double co
   unsigned int flat_bin = mh_hist_flat_bin_number(hist, dim_bins);
   double old = hist->data[flat_bin];
   hist->data[flat_bin] = content;
-  hist->total =+ content - old;
+  hist->total += content - old;
 }
 
 
