@@ -12,6 +12,7 @@
                   av = NULL; \
         } STMT_END
 
+
 STATIC void
 av_to_double_ary(pTHX_ AV *in, double *out)
 {
@@ -24,13 +25,33 @@ av_to_double_ary(pTHX_ AV *in, double *out)
     return;
 
   for (i = 0; i < thisN; ++i) {
-    if (NULL == (elem = av_fetch(in, i, 0))) {
+    if (NULL == (elem = av_fetch(in, i, 0)))
       croak("Could not fetch element from array");
-    }
     else
       out[i] = SvNV(*elem);
   }
 }
+
+
+STATIC void
+av_to_unsigned_int_ary(pTHX_ AV *in, unsigned int *out)
+{
+  I32 thisN;
+  SV** elem;
+  I32 i;
+
+  thisN = av_len(in)+1;
+  if (thisN == 0)
+    return;
+
+  for (i = 0; i < thisN; ++i) {
+    if (NULL == (elem = av_fetch(in, i, 0)))
+      croak("Could not fetch element from array");
+    else
+      out[i] = SvUV(*elem);
+  }
+}
+
 
 STATIC void
 unsigned_int_ary_to_av(pTHX_ unsigned int n, unsigned int *in, AV **out)
@@ -42,6 +63,7 @@ unsigned_int_ary_to_av(pTHX_ unsigned int n, unsigned int *in, AV **out)
     av_store(*out, i, newSVuv(in[i]));
   }
 }
+
 
 STATIC mh_axis_t **
 av_to_axis_ary(pTHX_ AV *in, I32 n)

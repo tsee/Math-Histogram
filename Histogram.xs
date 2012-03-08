@@ -347,3 +347,90 @@ mh_histogram_t::fill_nw(coords, weights)
               "at that point!", i);
     }
 
+
+void
+mh_histogram_t::fill_bin(dim_bin_nums)
+    AV *dim_bin_nums;
+  CODE:
+    av_to_unsigned_int_ary(aTHX_ dim_bin_nums, MH_HIST_ARG_BIN_BUFFER(THIS));
+    mh_hist_fill_bin(THIS, MH_HIST_ARG_BIN_BUFFER(THIS));
+
+
+void
+mh_histogram_t::fill_bin_w(dim_bin_nums, weight)
+    AV *dim_bin_nums;
+    double weight;
+  CODE:
+    av_to_unsigned_int_ary(aTHX_ dim_bin_nums, MH_HIST_ARG_BIN_BUFFER(THIS));
+    mh_hist_fill_bin_w(THIS, MH_HIST_ARG_BIN_BUFFER(THIS), weight);
+
+
+void
+mh_histogram_t::fill_bin_n(dim_bin_nums)
+    AV *dim_bin_nums;
+  PREINIT:
+    SV **elem;
+    SV *sv;
+    unsigned int i, n;
+  CODE:
+    n = av_len(dim_bin_nums)+1;
+    /* Fill each individually since we have
+     * to do lots of Perl => C conversion anyway */
+    for (i = 0; i < n; ++i) {
+      elem = av_fetch(dim_bin_nums, i, 0);
+      if (elem == NULL)
+        croak("Woah, this should never happen!");
+
+      /* Inner array deref */
+      sv = *elem;
+      SvGETMAGIC(sv);
+      if (SvROK(sv) && SvTYPE(SvRV(sv)) == SVt_PVAV) {
+        av_to_unsigned_int_ary(aTHX_ (AV*)SvRV(sv), MH_HIST_ARG_BIN_BUFFER(THIS));
+        mh_hist_fill_bin(THIS, MH_HIST_ARG_BIN_BUFFER(THIS));
+      }
+      else
+        croak("Element with index %u of input array reference is "
+              "not an array reference, stopping histogram filling "
+              "at that point!", i);
+    }
+
+
+void
+mh_histogram_t::fill_bin_nw(dim_bin_nums, weights)
+    AV *dim_bin_nums;
+    AV *weights;
+  PREINIT:
+    SV **elem;
+    SV *sv;
+    unsigned int i, n;
+    double weight;
+  CODE:
+    n = av_len(dim_bin_nums)+1;
+    if ((unsigned int)(av_len(weights)+1) != n)
+      croak("Bin-numbers and weights arrays need to be of same size!");
+
+    /* Fill each individually since we have
+     * to do lots of Perl => C conversion anyway */
+    for (i = 0; i < n; ++i) {
+      elem = av_fetch(weights, i, 0);
+      if (elem == NULL)
+        croak("Woah, this should never happen!");
+      weight = SvNV(*elem);
+
+      elem = av_fetch(dim_bin_nums, i, 0);
+      if (elem == NULL)
+        croak("Woah, this should never happen!");
+
+      /* Inner array deref */
+      sv = *elem;
+      SvGETMAGIC(sv);
+      if (SvROK(sv) && SvTYPE(SvRV(sv)) == SVt_PVAV) {
+        av_to_unsigned_int_ary(aTHX_ (AV*)SvRV(sv), MH_HIST_ARG_BIN_BUFFER(THIS));
+        mh_hist_fill_bin_w(THIS, MH_HIST_ARG_BIN_BUFFER(THIS), weight);
+      }
+      else
+        croak("Element with index %u of input array reference is "
+              "not an array reference, stopping histogram filling "
+              "at that point!", i);
+    }
+
