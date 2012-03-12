@@ -63,7 +63,9 @@ sub test_histogram {
 
     foreach my $bin_or_coord ([qw(fill), $coords], [qw(fill_bin), $b]) {
       my $fill_method = $bin_or_coord->[0];
+      my $fill_n_method = $fill_method . "_n";
       my $fill_w_method = $fill_method . "_w";
+      my $fill_nw_method = $fill_method . "_nw";
       my $location = $bin_or_coord->[1];
 
       my $nfills = $h->nfills;
@@ -71,24 +73,28 @@ sub test_histogram {
       my $total_before = $h->total;
       is($h->get_bin_content($b), 0., "assert that initial bin is empty");
       my $content = $h->get_bin_content($b);
-      foreach my $fill_amount (@test_fills) {
-        note("Testing for fill $fill_amount...");
-        if ($fill_amount == 1) {
-          $h->$fill_method($location);
+      foreach my $do_fill_n (0..1) {
+        foreach my $fill_amount (@test_fills) {
+          note("Testing for fill $fill_amount...");
+          if ($fill_amount == 1) {
+            if ($do_fill_n) { $h->$fill_n_method([$location]); }
+            else { $h->$fill_method($location); }
+            ++$nfills; $total += $fill_amount;
+            $content += $fill_amount;
+            is($h->get_bin_content($b), $content, "check content after fill");
+            is($h->total, $total, "check total");
+            is($h->nfills, $nfills, "check nfills");
+          }
+
+          if ($do_fill_n) { $h->$fill_nw_method([$location], [$fill_amount]); }
+          else { $h->$fill_w_method($location, $fill_amount); }
           ++$nfills; $total += $fill_amount;
           $content += $fill_amount;
-          is($h->get_bin_content($b), $content, "check content after fill");
+          is($h->get_bin_content($b), $content, "check content after fill_w");
           is($h->total, $total, "check total");
           is($h->nfills, $nfills, "check nfills");
-        }
-
-        $h->$fill_w_method($location, $fill_amount);
-        ++$nfills; $total += $fill_amount;
-        $content += $fill_amount;
-        is($h->get_bin_content($b), $content, "check content after fill_w");
-        is($h->total, $total, "check total");
-        is($h->nfills, $nfills, "check nfills");
-      }
+        } # end foreach fillamount
+      } # end do_fill_n or not
       $h->set_bin_content($b, 0.);
       is($h->total, $total_before, "check total back to normal");
     }
