@@ -10,7 +10,7 @@ use Exporter ();
 use Test::More;
 
 our @ISA = qw(Exporter);
-our @EXPORT = qw(run_ctest is_approx axis_eq);
+our @EXPORT = qw(run_ctest is_approx axis_eq histogram_eq);
 
 our ($USE_VALGRIND, $USE_GDB);
 
@@ -108,6 +108,22 @@ sub axis_eq {
     is($t->find_bin($upper), $ibin+1, "$name, $ibin: found upper bin boundary");
   }
 
+}
+
+sub histogram_eq {
+  my ($t, $ref, $name) = @_;
+
+  is_approx($t->total, $ref->total, "$name: total");
+  is($t->nfills, $ref->nfills, "$name: nfills");
+  is($t->ndim, $ref->ndim, "$name: ndim")
+    or return;
+
+  my $ndim = $t->ndim;
+  foreach my $i (0..$ndim-1) {
+    axis_eq($t->get_axis($i), $ref->get_axis($i), "$name (axis $i)");
+  }
+
+  ok($ref->data_equal_to($t), "$name: data equal to");
 }
 
 1;

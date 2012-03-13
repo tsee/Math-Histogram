@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <float.h>
 
 mh_histogram_t *
 mh_hist_create(unsigned short ndim, mh_axis_t **axises)
@@ -433,5 +434,36 @@ mh_hist_contract_dimension(mh_histogram_t *hist, unsigned int contracted_dimensi
   free(dim_bin_buffer);
   free(reduced_dim_bin_buffer);
 
+  /* fix the number of fills */
+  outhist->nfills = hist->nfills;
+
   return outhist;
+}
+
+
+int
+mh_hist_data_equal_eps(mh_histogram_t *left, mh_histogram_t *right, double epsilon)
+{
+  const unsigned int total_nbins_left = mh_hist_total_nbins(left);
+  const unsigned int total_nbins_right = mh_hist_total_nbins(right);
+  unsigned int i;
+  double *data_left = left->data;
+  double *data_right = right->data;
+
+  if (total_nbins_left != total_nbins_right)
+    return 0;
+
+  for (i = 0; i < total_nbins_left; ++i) {
+    if (   data_left[i] + epsilon < data_right[i]
+        || data_left[i] - epsilon > data_right[i])
+      return 0;
+  }
+
+  return 1;
+}
+
+int
+mh_hist_data_equal(mh_histogram_t *left, mh_histogram_t *right)
+{
+  return mh_hist_data_equal_eps(left, right, DBL_EPSILON);
 }

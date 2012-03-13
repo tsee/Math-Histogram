@@ -452,3 +452,23 @@ mh_histogram_t::set_bin_content(dim_bin_nums, content)
     av_to_unsigned_int_ary(aTHX_ dim_bin_nums, MH_HIST_ARG_BIN_BUFFER(THIS));
     mh_hist_set_bin_content(THIS, MH_HIST_ARG_BIN_BUFFER(THIS), content);
 
+
+mh_histogram_t *
+mh_histogram_t::contract_dimension(contracted_dimension)
+    unsigned int contracted_dimension;
+  PREINIT:
+    const char *CLASS = "Math::Histogram"; /* FIXME */
+  CODE:
+    RETVAL = mh_hist_contract_dimension(THIS, contracted_dimension);
+    if (RETVAL == NULL)
+      croak("Contracted dimension appears to be out of range!");
+  OUTPUT: RETVAL
+
+
+int
+mh_histogram_t::data_equal_to(other)
+    mh_histogram_t *other;
+  CODE:
+    RETVAL = mh_hist_data_equal(THIS, other);
+  OUTPUT: RETVAL
+

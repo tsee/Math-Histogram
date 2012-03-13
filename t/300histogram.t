@@ -10,15 +10,17 @@ use Math::Histogram::Test;
 my @axis_specs = ([2, 0., 1.], [100, 0., 1.], [[1., 2., 3., 4., 5.]]);
 test_histogram(\@axis_specs, 0);
 test_histogram(\@axis_specs, 1);
+test_histogram(\@axis_specs, 1, 1);
 
 done_testing();
 
 sub test_histogram {
   my $specs = shift;
   my $do_clone = shift;
+  my $do_retain_data_while_cloning = shift;
 
   my $h = make_histogram(@$specs);
-  $h = $h->clone if $do_clone;
+  $h = $do_retain_data_while_cloning ? $h->clone : $h->new_alike if $do_clone;
   isa_ok($h, 'Math::Histogram');
 
   test_hist_axises($h, $specs);

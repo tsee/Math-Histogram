@@ -125,6 +125,23 @@ double mh_hist_get_bin_content(mh_histogram_t *hist, unsigned int dim_bins[]);
  * Histogram data/dimensionality operations
  */
 
+/* Returns a new histogram that contains the same data as the input, except it is N-1 dimensional
+ * where the "contracted_dimension"th dimension has been summed over (counting dimensions from 0).
+ */
 mh_histogram_t *mh_hist_contract_dimension(mh_histogram_t *hist, unsigned int contracted_dimension);
+
+
+/*
+ *
+ * Test/comparison operations
+ */
+
+/* Returns 1 if the data in both histograms is equal within epsilon. epsilon defaults
+ * to the machine epsilon (DBL_EPSILON). Checks that the total number of bins is
+ * equal, but does not check whether the axises are equivalent nor the number of fills
+ * or total content.
+ */
+int mh_hist_data_equal(mh_histogram_t *left, mh_histogram_t *right);
+int mh_hist_data_equal_eps(mh_histogram_t *left, mh_histogram_t *right, double epsilon);
 
 #endif
