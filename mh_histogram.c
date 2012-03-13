@@ -356,3 +356,82 @@ mh_hist_get_bin_content(mh_histogram_t *hist, unsigned int dim_bins[])
   return hist->data[mh_hist_flat_bin_number(hist, dim_bins)];
 }
 
+
+mh_histogram_t *
+mh_hist_contract_dimension(mh_histogram_t *hist, unsigned int contracted_dimension)
+{
+  mh_axis_t **axises;
+  mh_axis_t **new_hist_axises;
+  mh_histogram_t *outhist;
+  unsigned int i, j, linear_nbins, ilinear;
+  unsigned int *dimension_map;
+  unsigned int *dim_bin_buffer;
+  unsigned int *reduced_dim_bin_buffer;
+  unsigned int ndims = MH_HIST_NDIM(hist);
+
+  if (ndims == 1 || contracted_dimension >= ndims)
+    return NULL;
+
+  axises = hist->axises;
+
+  /* Mapping from reduced dimension number to original
+   * dimension number, so from destination to source. */
+  dimension_map = malloc(sizeof(unsigned int) * (ndims-1));
+  /* Setup array of cloned axises for the new histogram. */
+  new_hist_axises = malloc(sizeof(mh_axis_t *) * (ndims-1));
+  j = 0;
+  for (i = 0; i < ndims; ++i) {
+    if (i == contracted_dimension) { /* FIXME there must be a better way */
+      j = 1;
+      continue;
+    }
+    dimension_map[i-j] = i;
+    new_hist_axises[i-j] = mh_axis_clone(axises[i]);
+    if (new_hist_axises[i-j] == NULL) {
+      ndims = i-j; /* abuse for emergency cleanup */
+      for (i = 0; i < ndims; ++i)
+        free(new_hist_axises[i]);
+      free(new_hist_axises);
+      free(dimension_map);
+      return NULL;
+    }
+  }
+
+  /* Create output N-1 dimensional histogram. */
+  outhist = mh_hist_create(ndims-1, new_hist_axises);
+  free(new_hist_axises);
+
+  dim_bin_buffer = malloc(ndims * sizeof(unsigned int));
+  reduced_dim_bin_buffer = malloc((ndims-1) * sizeof(unsigned int));
+
+  /* - Iterate over all bins in the source histogram.
+   *   - Find the vector of bin indexes in each dimension.
+   *   - Copy the bin indexes over to the N-1 dimensional vector.
+   *   - Use that vector to write the original bin's content to the
+   *     right bin in the output histogram.
+   *
+   * This isn't hugely efficient but nicely abstracts away the problem
+   * with N/N-1 dimensionality by having the dimension mapping in a data
+   * structure (dimension_map) and simply skipping a dimension to contract.
+   */
+  /* TODO allow skipping of overflow/underflow in contraction somehow?
+   * TODO generic mechanism for contracting only a range of bins?
+   */
+  linear_nbins = mh_hist_total_nbins(hist);
+  for (ilinear = 0; ilinear < linear_nbins; ++ilinear) {
+    /* Get the [ix, iy, iz, ...] N-dim bin numbers from the linear bin. */
+    mh_hist_flat_bin_number_to_dim_bins(hist, ilinear, dim_bin_buffer);
+
+    /* Copy all dimension indexes but the one we're contracting. */
+    for (i = 0; i < ndims-1; ++i)
+      reduced_dim_bin_buffer[i] = dim_bin_buffer[ dimension_map[i] ];
+
+    /* direct access to hist->data since we're iterating in linearized bins already */
+    mh_hist_fill_bin_w(outhist, reduced_dim_bin_buffer, hist->data[ilinear]);
+  }
+
+  free(dim_bin_buffer);
+  free(reduced_dim_bin_buffer);
+
+  return outhist;
+}

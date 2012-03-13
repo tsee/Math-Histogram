@@ -120,5 +120,11 @@ void mh_hist_set_bin_content(mh_histogram_t *hist, unsigned int dim_bins[], doub
 double mh_hist_get_bin_content(mh_histogram_t *hist, unsigned int dim_bins[]);
 
 
+/*
+ *
+ * Histogram data/dimensionality operations
+ */
+
+mh_histogram_t *mh_hist_contract_dimension(mh_histogram_t *hist, unsigned int contracted_dimension);
 
 #endif
