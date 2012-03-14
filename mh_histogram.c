@@ -364,7 +364,7 @@ mh_hist_contract_dimension(mh_histogram_t *hist, unsigned int contracted_dimensi
   mh_axis_t **axises;
   mh_axis_t **new_hist_axises;
   mh_histogram_t *outhist;
-  unsigned int i, j, linear_nbins, ilinear;
+  unsigned int i, j, linear_nbins, ilinear, flat_bin;
   unsigned int *dimension_map;
   unsigned int *dim_bin_buffer;
   unsigned int *reduced_dim_bin_buffer;
@@ -427,15 +427,18 @@ mh_hist_contract_dimension(mh_histogram_t *hist, unsigned int contracted_dimensi
     for (i = 0; i < ndims-1; ++i)
       reduced_dim_bin_buffer[i] = dim_bin_buffer[ dimension_map[i] ];
 
+    /* unrolled fill_w without updating total and nfills */
+    flat_bin = mh_hist_flat_bin_number(outhist, reduced_dim_bin_buffer);
     /* direct access to hist->data since we're iterating in linearized bins already */
-    mh_hist_fill_bin_w(outhist, reduced_dim_bin_buffer, hist->data[ilinear]);
+    outhist->data[flat_bin] += hist->data[ilinear];
   }
 
   free(dim_bin_buffer);
   free(reduced_dim_bin_buffer);
 
-  /* fix the number of fills */
+  /* fix the number of fills and total*/
   outhist->nfills = hist->nfills;
+  outhist->total = hist->total;
 
   return outhist;
 }
@@ -467,3 +470,5 @@ mh_hist_data_equal(mh_histogram_t *left, mh_histogram_t *right)
 {
   return mh_hist_data_equal_eps(left, right, DBL_EPSILON);
 }
+
+
