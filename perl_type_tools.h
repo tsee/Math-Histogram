@@ -26,9 +26,13 @@ av_to_double_ary(pTHX_ AV *in, double *out)
 
   for (i = 0; i < thisN; ++i) {
     if (NULL == (elem = av_fetch(in, i, 0)))
-      croak("Could not fetch element from array");
-    else
+      croak("Could not fetch element %i from array", i);
+    else if (SvROK(*elem)) {
+      croak("Element %i in array is a reference! (Expected number)", i);
+    }
+    else {
       out[i] = SvNV(*elem);
+    }
   }
 }
 
