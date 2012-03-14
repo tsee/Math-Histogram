@@ -472,3 +472,59 @@ mh_hist_data_equal(mh_histogram_t *left, mh_histogram_t *right)
 }
 
 
+int
+mh_hist_cumulate(mh_histogram_t *hist, unsigned int cumulation_dimension)
+{
+  const unsigned int ndims = MH_HIST_NDIM(hist);
+  unsigned int ilinear;
+  const unsigned int nlinearbins = mh_hist_total_nbins(hist);
+  unsigned int *bin_buffer;
+
+  if (cumulation_dimension >= ndims)
+    return 0;
+
+  /* In a single dimension, the content of the i-th bin of the cumulative
+   * histogram is the content of the i-1-th bin of the cumulative histogram
+   * PLUS the content of the i-th bin of the ORIGINAL histogram.
+   *
+   * So if we have an N-dimensional histogram, we simply apply that same
+   * bit of logic to each bin in the dimension to cumulate.
+   * Since there's not an easy facility yet to iterate over a single dimension,
+   * we use the fact that due to the way we store data, the bin numbers increase
+   * in such a way along each dimension as we iterate over the flattened
+   * representation in memory, that C[i-1] has always been calculated.
+   * This means that when we visit any given bin, we know we've visited all
+   * other bins that precede the current bin in any dimension. In other words,
+   * we can use the C[i] = C[i-1] + H[i] relation.
+   * With this property and doing the same in-place, we get: H[i] += H[i-1]
+   */
+  bin_buffer = hist->bin_buffer;
+  for (ilinear = 0; ilinear < nlinearbins; ++ilinear) {
+    mh_hist_flat_bin_number_to_dim_bins(hist, ilinear, bin_buffer);
+    if (bin_buffer[cumulation_dimension] > 0) {
+      bin_buffer[cumulation_dimension]--; /* one step back in the cumulation dimension */
+      hist->data[ilinear] += hist->data[ mh_hist_flat_bin_number(hist, bin_buffer) ];
+    }
+  }
+
+  return 1;
+}
+
+
+void
+mh_hist_debug_bin_iter_print(mh_histogram_t *hist)
+{
+  unsigned int i, j;
+  const unsigned int ndim = MH_HIST_NDIM(hist);
+  const unsigned int n = mh_hist_total_nbins(hist);
+
+  for (i = 0; i < n; ++i) {
+    mh_hist_flat_bin_number_to_dim_bins(hist, i, MH_HIST_ARG_BIN_BUFFER(hist));
+    printf("[%u", MH_HIST_ARG_BIN_BUFFER(hist)[0]);
+    for(j = 1; j < ndim; ++j) {
+      printf(",%u", MH_HIST_ARG_BIN_BUFFER(hist)[j]);
+    }
+    printf("]\n");
+  }
+}
+

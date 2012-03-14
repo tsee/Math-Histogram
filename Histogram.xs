@@ -490,3 +490,8 @@ mh_histogram_t::data_equal_to(other)
     RETVAL = mh_hist_data_equal(THIS, other);
   OUTPUT: RETVAL
 
+void
+mh_histogram_t::_debug_bin_iter_print()
+  CODE:
+    mh_hist_debug_bin_iter_print(THIS);
+

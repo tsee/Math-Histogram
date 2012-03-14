@@ -130,6 +130,11 @@ double mh_hist_get_bin_content(mh_histogram_t *hist, unsigned int dim_bins[]);
  */
 mh_histogram_t *mh_hist_contract_dimension(mh_histogram_t *hist, unsigned int contracted_dimension);
 
+/* Transforms the given histogram into a cumulative histogram in the provided dimension
+ * by summing over the values in that dimension as H[i] = sum(j=0..i, H[j]).
+ * Returns 1 if successful, 0 otherwise (cumulation_dimension out of range).
+ */
+int mh_hist_cumulate(mh_histogram_t *hist, unsigned int cumulation_dimension);
 
 /*
  *
@@ -143,5 +148,15 @@ mh_histogram_t *mh_hist_contract_dimension(mh_histogram_t *hist, unsigned int co
  */
 int mh_hist_data_equal(mh_histogram_t *left, mh_histogram_t *right);
 int mh_hist_data_equal_eps(mh_histogram_t *left, mh_histogram_t *right, double epsilon);
+
+
+
+/*
+ *
+ * Debugging functions. Not proper API.
+ */
+void mh_hist_debug_bin_iter_print(mh_histogram_t *hist);
+
+
 
 #endif
