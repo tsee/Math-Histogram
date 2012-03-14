@@ -47,7 +47,9 @@ mh_axis_t::new(...)
   PREINIT:
     SV *tmp;
     AV *bins;
-    I32 n;
+    I32 n, i;
+    double prev;
+    double *dbl_ary;
   CODE:
     /* varbins => just a single arrayref */
     if (items == 2) {
@@ -57,13 +59,24 @@ mh_axis_t::new(...)
         croak("Need either array reference as first parameter or a number of bins followed by min/max");
       n = av_len(bins) + 1;
       if (n <= 1)
-        croak("Bins array must have at least on bin lower and upper boundary");
+        croak("Bins array must have at least a lower and upper boundary for a single bin");
 
       RETVAL = mh_axis_create( n-1, MH_AXIS_OPT_VARBINS );
       if (RETVAL == NULL)
         croak("Cannot create Math::Histogram::Axis! Invalid bin number or out of memory.");
 
       av_to_double_ary(aTHX_ bins, RETVAL->bins);
+
+      /* Check whether the numbers make some basic sense */
+      dbl_ary = RETVAL->bins;
+      prev = dbl_ary[0];
+      for (i = 1; i < n; ++i) {
+        if (dbl_ary[i] <= prev) {
+          mh_axis_free(RETVAL);
+          croak("Bin boundaries for histogram axis are not strictly monotonic!");
+        }
+        prev = dbl_ary[i];
+      }
       mh_axis_init( RETVAL, RETVAL->bins[0], RETVAL->bins[n-1] );
     }
     /* fixbins => n, min, max */
@@ -71,7 +84,12 @@ mh_axis_t::new(...)
       RETVAL = mh_axis_create( SvUV(ST(1)), MH_AXIS_OPT_FIXEDBINS );
       if (RETVAL == NULL)
         croak("Cannot create Math::Histogram::Axis! Invalid bin number or out of memory.");
-      mh_axis_init( RETVAL, SvNV(ST(2)), SvNV(ST(3)) );
+      prev = SvNV(ST(2));
+      if (prev >= SvNV(ST(3))) {
+        mh_axis_free(RETVAL);
+        croak("Lower axis boundary (%f) cannot be larger than or equal to upper boundary (%f)!", prev, SvNV(ST(3)));
+      }
+      mh_axis_init( RETVAL, prev, SvNV(ST(3)) );
     }
   OUTPUT: RETVAL
 
