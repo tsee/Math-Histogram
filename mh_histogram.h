@@ -156,6 +156,7 @@ int mh_hist_data_equal_eps(mh_histogram_t *left, mh_histogram_t *right, double e
  * Debugging functions. Not proper API.
  */
 void mh_hist_debug_bin_iter_print(mh_histogram_t *hist);
+void mh_hist_debug_dump_data(mh_histogram_t *hist);
 
 
 

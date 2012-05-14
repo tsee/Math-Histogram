@@ -458,8 +458,10 @@ mh_hist_data_equal_eps(mh_histogram_t *left, mh_histogram_t *right, double epsil
 
   for (i = 0; i < total_nbins_left; ++i) {
     if (   data_left[i] + epsilon < data_right[i]
-        || data_left[i] - epsilon > data_right[i])
+        || data_left[i] - epsilon > data_right[i]) {
+      /* printf("NOT EQUAL: at %u: left=%.10f right=%.10f\n", i, data_left[i], data_right[i]); */
       return 0;
+    }
   }
 
   return 1;
@@ -502,8 +504,10 @@ mh_hist_cumulate(mh_histogram_t *hist, unsigned int cumulation_dimension)
   for (ilinear = 0; ilinear < nlinearbins; ++ilinear) {
     mh_hist_flat_bin_number_to_dim_bins(hist, ilinear, bin_buffer);
     if (bin_buffer[cumulation_dimension] > 0) {
+      /* printf("%u = %f, ", ilinear, hist->data[ilinear]); */
       bin_buffer[cumulation_dimension]--; /* one step back in the cumulation dimension */
       hist->data[ilinear] += hist->data[ mh_hist_flat_bin_number(hist, bin_buffer) ];
+      /* printf("after = %f (prevbin: %i, %f)\n", hist->data[ilinear], mh_hist_flat_bin_number(hist, bin_buffer), hist->data[mh_hist_flat_bin_number(hist, bin_buffer)]); */
     }
   }
 
@@ -528,3 +532,17 @@ mh_hist_debug_bin_iter_print(mh_histogram_t *hist)
   }
 }
 
+void
+mh_hist_debug_dump_data(mh_histogram_t *hist)
+{
+  unsigned int i, j;
+  unsigned int ndims = MH_HIST_NDIM(hist);
+  unsigned int n = mh_hist_total_nbins(hist);
+  for (i = 0; i < n; ++i) {
+    mh_hist_flat_bin_number_to_dim_bins(hist, i, MH_HIST_ARG_BIN_BUFFER(hist));
+    for (j = 0; j < ndims; ++j) {
+      printf("%u ", (MH_HIST_ARG_BIN_BUFFER(hist))[j]);
+    }
+    printf("(%u) => %.10f\n", i, hist->data[i]);
+  }
+}

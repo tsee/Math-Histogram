@@ -483,6 +483,12 @@ mh_histogram_t::contract_dimension(contracted_dimension)
   OUTPUT: RETVAL
 
 
+void
+mh_histogram_t::cumulate(cumulation_dimension)
+    unsigned int cumulation_dimension;
+  CODE:
+    mh_hist_cumulate(THIS, cumulation_dimension);
+
 int
 mh_histogram_t::data_equal_to(other)
     mh_histogram_t *other;
@@ -490,8 +496,21 @@ mh_histogram_t::data_equal_to(other)
     RETVAL = mh_hist_data_equal(THIS, other);
   OUTPUT: RETVAL
 
+
 void
 mh_histogram_t::_debug_bin_iter_print()
   CODE:
     mh_hist_debug_bin_iter_print(THIS);
+
+void
+mh_histogram_t::_debug_dump_data()
+  CODE:
+    mh_hist_debug_dump_data(THIS);
+
+## AV *
+## mh_histogram_t::foo()
+##   CODE:
+##   RETVAL = (AV*)sv_2mortal((SV*)newAV());
+##     double_ary_to_av(aTHX_ mh_hist_total_nbins(THIS), THIS->data, &RETVAL);
+##   OUTPUT: RETVAL
 
