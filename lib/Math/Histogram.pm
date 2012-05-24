@@ -32,13 +32,16 @@ __END__
 
 =head1 NAME
 
-Math::Histogram - ...
+Math::Histogram - N-dimensional histogramming library
 
 =head1 SYNOPSIS
 
   use Math::Histogram;
 
 =head1 DESCRIPTION
+
+This Perl module wraps an n-dimensional histogramming library
+written in C.
 
 =head1 SEE ALSO
 
