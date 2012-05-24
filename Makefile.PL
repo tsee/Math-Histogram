@@ -65,7 +65,7 @@ WriteMakefile(
     ($] >= 5.005 ?
       (ABSTRACT_FROM  => 'lib/Math/Histogram.pm', # retrieve abstract from module
        AUTHOR         => 'Steffen Mueller <smueller@cpan.org>') : ()),
-    LIBS              => [''],
+    LIBS              => ['-lm'],
     DEFINE            => $define,
     INC               => '-I.',
     OBJECT            => '$(O_FILES)', # link all the C files too
@@ -83,7 +83,7 @@ MAKE_FRAG
     foreach my $i (0..$#test_cfiles) {
       my $file = $test_cfiles[$i];
       my $exefile = $test_exefiles[$i];
-      $make_frag .= "\t\$(CC) $define -I. $file mh*.o -o $exefile\n";
+      $make_frag .= "\t\$(CC) $define -I. $file mh*.o -lm -o $exefile\n";
     }
     return $make_frag;
   }

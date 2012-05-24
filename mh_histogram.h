@@ -10,6 +10,10 @@ typedef struct mh_histogram {
   mh_axis_t **axises;
   /* The actual bins */
   double *data;
+  /* Bit field indicating whether a given bin is an
+   * overflow (or underflow) bin */
+  unsigned char *overflow_bin_bitfield;
+  unsigned int nbins_total;
 
   /* content */
   unsigned int nfills;

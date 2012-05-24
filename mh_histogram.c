@@ -4,6 +4,29 @@
 #include <stdlib.h>
 #include <string.h>
 #include <float.h>
+#include <math.h>
+
+static unsigned int
+_mh_hist_compute_total_nbins(mh_histogram_t *hist)
+{
+  unsigned int i;
+  unsigned int bins = 1;
+  unsigned int ndim = MH_HIST_NDIM(hist);
+  mh_axis_t **axises = hist->axises;
+
+  for (i = 0; i < ndim; ++i)
+    bins *= MH_AXIS_NBINS(axises[i])+2;
+  /* printf("Total number of bins: %u\n", bins); */
+  return bins;
+}
+
+static void
+_mh_hist_populate_overflow_bin_bitfield(mh_histogram_t *hist)
+{
+  unsigned int i;
+  unsigned int n = hist->nbins_total;
+  /* FIXME implement */
+}
 
 mh_histogram_t *
 mh_hist_create(unsigned short ndim, mh_axis_t **axises)
@@ -41,9 +64,21 @@ mh_hist_create(unsigned short ndim, mh_axis_t **axises)
   for (i = 0; i < ndim; ++i)
     hist->axises[i] = axises[i];
 
-  nbins = mh_hist_total_nbins(hist);
+  nbins = _mh_hist_compute_total_nbins(hist);
+  hist->nbins_total = nbins;
   hist->data = (double *)calloc(nbins, sizeof(double));
   if (hist->data == NULL) {
+    free(hist->bin_buffer);
+    free(hist->axises);
+    free(hist->arg_coord_buffer);
+    free(hist);
+    return NULL;
+  }
+
+  i = (unsigned int)(ceilf((float)nbins/8));
+  hist->overflow_bin_bitfield = (unsigned char*)calloc(i, sizeof(unsigned char *));
+  if (hist->overflow_bin_bitfield == NULL) {
+    free(hist->data);
     free(hist->bin_buffer);
     free(hist->axises);
     free(hist->arg_coord_buffer);
@@ -94,7 +129,9 @@ mh_hist_clone(mh_histogram_t *hist_proto, int do_copy_data)
   for (i = 0; i < hist->ndim; ++i)
     hist->axises[i] = mh_axis_clone(hist_proto->axises[i]);
 
-  nbins = mh_hist_total_nbins(hist_proto);
+  hist->nbins_total = hist_proto->nbins_total;
+  nbins = hist->nbins_total;
+
   if (do_copy_data != 0) {
     hist->data = (double *)malloc(nbins * sizeof(double));
     if (hist->data == NULL) {
@@ -124,6 +161,18 @@ mh_hist_clone(mh_histogram_t *hist_proto, int do_copy_data)
     hist->nfills = 0;
   }
 
+  i = (unsigned int)(ceilf((float)nbins/8));
+  hist->overflow_bin_bitfield = (unsigned char*)malloc(i * sizeof(unsigned char *));
+  if (hist->overflow_bin_bitfield == NULL) {
+    free(hist->data);
+    free(hist->bin_buffer);
+    free(hist->arg_coord_buffer);
+    free(hist->axises);
+    free(hist);
+    return NULL;
+  }
+  memcpy(hist->overflow_bin_bitfield, hist_proto->overflow_bin_bitfield, i *sizeof(unsigned char *));
+
   return hist;
 }
 
@@ -140,6 +189,7 @@ mh_hist_free(mh_histogram_t *hist)
   free(hist->arg_coord_buffer);
   free(hist->axises);
   free(hist->data);
+  free(hist->overflow_bin_bitfield);
   free(hist);
 }
 
@@ -173,18 +223,11 @@ mh_hist_flat_bin_number(mh_histogram_t *hist, unsigned int dim_bins[])
 }
 
 
+/* just as an API */
 unsigned int
 mh_hist_total_nbins(mh_histogram_t *hist)
 {
-  unsigned int i;
-  unsigned int bins = 1;
-  unsigned int ndim = MH_HIST_NDIM(hist);
-  mh_axis_t **axises = hist->axises;
-
-  for (i = 0; i < ndim; ++i)
-    bins *= MH_AXIS_NBINS(axises[i])+2;
-  /* printf("Total number of bins: %u\n", bins); */
-  return bins;
+  return hist->nbins_total;
 }
 
 
@@ -418,7 +461,7 @@ mh_hist_contract_dimension(mh_histogram_t *hist, unsigned int contracted_dimensi
   /* TODO allow skipping of overflow/underflow in contraction somehow?
    * TODO generic mechanism for contracting only a range of bins?
    */
-  linear_nbins = mh_hist_total_nbins(hist);
+  linear_nbins = hist->nbins_total;
   for (ilinear = 0; ilinear < linear_nbins; ++ilinear) {
     /* Get the [ix, iy, iz, ...] N-dim bin numbers from the linear bin. */
     mh_hist_flat_bin_number_to_dim_bins(hist, ilinear, dim_bin_buffer);
@@ -447,8 +490,8 @@ mh_hist_contract_dimension(mh_histogram_t *hist, unsigned int contracted_dimensi
 int
 mh_hist_data_equal_eps(mh_histogram_t *left, mh_histogram_t *right, double epsilon)
 {
-  const unsigned int total_nbins_left = mh_hist_total_nbins(left);
-  const unsigned int total_nbins_right = mh_hist_total_nbins(right);
+  const unsigned int total_nbins_left = left->nbins_total;
+  const unsigned int total_nbins_right = right->nbins_total;
   unsigned int i;
   double *data_left = left->data;
   double *data_right = right->data;
@@ -479,7 +522,7 @@ mh_hist_cumulate(mh_histogram_t *hist, unsigned int cumulation_dimension)
 {
   const unsigned int ndims = MH_HIST_NDIM(hist);
   unsigned int ilinear;
-  const unsigned int nlinearbins = mh_hist_total_nbins(hist);
+  const unsigned int nlinearbins = hist->nbins_total;
   unsigned int *bin_buffer;
 
   if (cumulation_dimension >= ndims)
@@ -520,7 +563,7 @@ mh_hist_debug_bin_iter_print(mh_histogram_t *hist)
 {
   unsigned int i, j;
   const unsigned int ndim = MH_HIST_NDIM(hist);
-  const unsigned int n = mh_hist_total_nbins(hist);
+  const unsigned int n = hist->nbins_total;
 
   for (i = 0; i < n; ++i) {
     mh_hist_flat_bin_number_to_dim_bins(hist, i, MH_HIST_ARG_BIN_BUFFER(hist));
@@ -537,7 +580,7 @@ mh_hist_debug_dump_data(mh_histogram_t *hist)
 {
   unsigned int i, j;
   unsigned int ndims = MH_HIST_NDIM(hist);
-  unsigned int n = mh_hist_total_nbins(hist);
+  unsigned int n = hist->nbins_total;
   for (i = 0; i < n; ++i) {
     mh_hist_flat_bin_number_to_dim_bins(hist, i, MH_HIST_ARG_BIN_BUFFER(hist));
     for (j = 0; j < ndims; ++j) {
@@ -545,4 +588,10 @@ mh_hist_debug_dump_data(mh_histogram_t *hist)
     }
     printf("(%u) => %.10f\n", i, hist->data[i]);
   }
+}
+
+int
+mh_hist_is_overflow_bin(mh_histogram_t *hist, unsigned int dim_bins[])
+{
+  return 0; /* FIXME implement */
 }
