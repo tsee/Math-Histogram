@@ -1,7 +1,8 @@
 #ifndef mh_histogram_h_
 #define mh_histogram_h_
 
-#include <mh_axis.h>
+#include "mh_bitfield.h"
+#include "mh_axis.h"
 
 typedef struct mh_histogram {
   /* The number of dimensions in the histogram, starting from 0 */
@@ -12,7 +13,7 @@ typedef struct mh_histogram {
   double *data;
   /* Bit field indicating whether a given bin is an
    * overflow (or underflow) bin */
-  unsigned char *overflow_bin_bitfield;
+  mh_bitfield_t overflow_bin_bitfield;
   unsigned int nbins_total;
 
   /* content */
@@ -88,6 +89,12 @@ void mh_hist_find_bin_numbers(mh_histogram_t *hist, double coord[], unsigned int
  * mh_hist_find_bin_buf does the same but also exposes the ndim bin numbers. */
 unsigned int mh_hist_find_bin(mh_histogram_t *hist, double coord[]);
 unsigned int mh_hist_find_bin_buf(mh_histogram_t *hist, double coord[], unsigned int bin_number_buffer[]);
+
+/* Given array of bin numbers or a linear bin index, return whether or not
+ * the bin is an overflow bin. Efficient for linear bin indices.
+ * "Overflow bin" means "underflow or overflow" or "not a normal bin". */
+int mh_hist_is_overflow_bin(mh_histogram_t *hist, unsigned int dim_bins[]);
+int mh_hist_is_overflow_bin_linear(mh_histogram_t *hist, unsigned int linear_bin_num);
 
 /*
  *

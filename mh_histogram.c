@@ -23,9 +23,44 @@ _mh_hist_compute_total_nbins(mh_histogram_t *hist)
 static void
 _mh_hist_populate_overflow_bin_bitfield(mh_histogram_t *hist)
 {
-  unsigned int i;
-  unsigned int n = hist->nbins_total;
-  /* FIXME implement */
+  const unsigned int ndims = MH_HIST_NDIM(hist);
+  const unsigned int nlinearbins = hist->nbins_total;
+  unsigned int ilinear, i;
+  mh_axis_t **axises = hist->axises;
+  unsigned int *bin_buffer = hist->bin_buffer;
+  mh_bitfield_t bitfield = hist->overflow_bin_bitfield;
+
+  for (i = 0; i < ndims; ++i)
+    bin_buffer[i] = 0;
+
+  for (ilinear = 0; ilinear < nlinearbins;) {
+    /*
+     * printf("L=%u", ilinear);
+     * for (i = 0; i < ndims; ++i)
+     *   printf(" %u", bin_buffer[i]);
+     * printf("\n");
+     */
+    /* FIXME there must be a better algorithm than a full iteration! */
+    for (i = 0; i < ndims; ++i) {
+      if (bin_buffer[i] == 0
+          || bin_buffer[i] > MH_AXIS_NBINS(axises[i])) {
+        MH_BITFIELD_SET(bitfield, ilinear);
+        break;
+      }
+    }
+
+    /* Iterate both linear bin and bin vector */
+    ++ilinear;
+    i = 0;
+    ++bin_buffer[i];
+    while (i < ndims && bin_buffer[i] >= MH_AXIS_NBINS(axises[i])+2) {
+      bin_buffer[i] = 0;
+      ++i;
+      ++bin_buffer[i];
+    }
+  }
+
+  /* printf("\n"); */
 }
 
 mh_histogram_t *
@@ -75,8 +110,7 @@ mh_hist_create(unsigned short ndim, mh_axis_t **axises)
     return NULL;
   }
 
-  i = (unsigned int)(ceilf((float)nbins/8));
-  hist->overflow_bin_bitfield = (unsigned char*)calloc(i, sizeof(unsigned char *));
+  hist->overflow_bin_bitfield = MH_BITFIELD_CALLOC(nbins);
   if (hist->overflow_bin_bitfield == NULL) {
     free(hist->data);
     free(hist->bin_buffer);
@@ -85,6 +119,8 @@ mh_hist_create(unsigned short ndim, mh_axis_t **axises)
     free(hist);
     return NULL;
   }
+
+  _mh_hist_populate_overflow_bin_bitfield(hist);
 
   /* TODO should initialization live elsewhere? */
   hist->total = 0.;
@@ -161,8 +197,8 @@ mh_hist_clone(mh_histogram_t *hist_proto, int do_copy_data)
     hist->nfills = 0;
   }
 
-  i = (unsigned int)(ceilf((float)nbins/8));
-  hist->overflow_bin_bitfield = (unsigned char*)malloc(i * sizeof(unsigned char *));
+  i = (unsigned int)(ceilf((float)nbins/32));
+  hist->overflow_bin_bitfield = MH_BITFIELD_MALLOC(nbins);
   if (hist->overflow_bin_bitfield == NULL) {
     free(hist->data);
     free(hist->bin_buffer);
@@ -171,7 +207,7 @@ mh_hist_clone(mh_histogram_t *hist_proto, int do_copy_data)
     free(hist);
     return NULL;
   }
-  memcpy(hist->overflow_bin_bitfield, hist_proto->overflow_bin_bitfield, i *sizeof(unsigned char *));
+  MH_BITFIELD_COPY(hist->overflow_bin_bitfield, hist_proto->overflow_bin_bitfield, nbins);
 
   return hist;
 }
@@ -189,7 +225,7 @@ mh_hist_free(mh_histogram_t *hist)
   free(hist->arg_coord_buffer);
   free(hist->axises);
   free(hist->data);
-  free(hist->overflow_bin_bitfield);
+  MH_BITFIELD_FREE(hist->overflow_bin_bitfield);
   free(hist);
 }
 
@@ -593,5 +629,12 @@ mh_hist_debug_dump_data(mh_histogram_t *hist)
 int
 mh_hist_is_overflow_bin(mh_histogram_t *hist, unsigned int dim_bins[])
 {
-  return 0; /* FIXME implement */
+  return MH_BITFIELD_GET(hist->overflow_bin_bitfield, mh_hist_flat_bin_number(hist, dim_bins));
 }
+
+int
+mh_hist_is_overflow_bin_linear(mh_histogram_t *hist, unsigned int linear_bin_num)
+{
+  return MH_BITFIELD_GET(hist->overflow_bin_bitfield, linear_bin_num);
+}
+
