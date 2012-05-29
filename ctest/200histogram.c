@@ -64,6 +64,16 @@ void test_flat_bin_number(int do_clone, int varbins, unsigned int base_nbins)
 
     mh_hist_flat_bin_number_to_dim_bins(h1, flat_bin, dim_bins_buf);
     is_int_m(dim_bins_buf[0], i, "1d cubything, reverse");
+
+    /* Check overflow bin detection */
+    if (i == 0 || i == base_nbins+1) {
+      ok_m(mh_hist_is_overflow_bin(h1, dim_bins1), "1d cubything, overflow check");
+      ok_m(mh_hist_is_overflow_bin_linear(h1, i), "1d cubything, linear overflow check");
+    }
+    else {
+      ok_m(!mh_hist_is_overflow_bin(h1, dim_bins1), "1d cubything, overflow check");
+      ok_m(!mh_hist_is_overflow_bin_linear(h1, i), "1d cubything, linear overflow check");
+    }
   }
 
   h2 = make_cubything_hist(2, base_nbins, varbins);
@@ -95,6 +105,18 @@ void test_flat_bin_number(int do_clone, int varbins, unsigned int base_nbins)
       mh_hist_flat_bin_number_to_dim_bins(h2, flat_bin, dim_bins_buf);
       is_int_m(dim_bins_buf[0], dim_bins2[0], buf);
       is_int_m(dim_bins_buf[1], dim_bins2[1], buf);
+
+      /* check overflow bin detection */
+      if (x == 0 || x == base_nbins+1 || y == 0 || y == base_nbins+2) {
+        sprintf(buf, "2d cubything, check overflow (yes): flat_bin=%u x=%u y=%u (%s)", flat_bin, x, y, dimbuf);
+        ok_m(mh_hist_is_overflow_bin(h2, dim_bins2), buf);
+        ok_m(mh_hist_is_overflow_bin_linear(h2, flat_bin), buf);
+      }
+      else {
+        sprintf(buf, "2d cubything, check overflow (no): flat_bin=%u x=%u y=%u (%s)", flat_bin, x, y, dimbuf);
+        ok_m(!mh_hist_is_overflow_bin(h2, dim_bins2), buf);
+        ok_m(!mh_hist_is_overflow_bin_linear(h2, flat_bin), buf);
+      }
     }
   }
 
@@ -132,6 +154,21 @@ void test_flat_bin_number(int do_clone, int varbins, unsigned int base_nbins)
         is_int_m(dim_bins_buf[0], dim_bins3[0], buf);
         is_int_m(dim_bins_buf[1], dim_bins3[1], buf);
         is_int_m(dim_bins_buf[2], dim_bins3[2], buf);
+
+        /* check overflow */
+        if (   x == 0 || x == base_nbins+1
+            || y == 0 || y == base_nbins+2
+            || z == 0 || z == base_nbins+3)
+        {
+          sprintf(buf, "3d cubything, check overflow (yes): flat_bin=%u x=%u y=%u z=%u (%s)", flat_bin, x, y, z, dimbuf);
+          ok_m(mh_hist_is_overflow_bin(h3, dim_bins3), buf);
+          ok_m(mh_hist_is_overflow_bin_linear(h3, flat_bin), buf);
+        }
+        else {
+          sprintf(buf, "3d cubything, check overflow (no): flat_bin=%u x=%u y=%u z=%u (%s)", flat_bin, x, y, z, dimbuf);
+          ok_m(!mh_hist_is_overflow_bin(h3, dim_bins3), buf);
+          ok_m(!mh_hist_is_overflow_bin_linear(h3, flat_bin), buf);
+        }
       }
     }
   }
