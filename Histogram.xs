@@ -497,6 +497,21 @@ mh_histogram_t::data_equal_to(other)
   OUTPUT: RETVAL
 
 
+int
+mh_histogram_t::is_overflow_bin(dim_bin_nums)
+    AV *dim_bin_nums;
+  CODE:
+    av_to_unsigned_int_ary(aTHX_ dim_bin_nums, MH_HIST_ARG_BIN_BUFFER(THIS));
+    RETVAL = !!mh_hist_is_overflow_bin(THIS, MH_HIST_ARG_BIN_BUFFER(THIS));
+  OUTPUT: RETVAL
+
+int
+mh_histogram_t::is_overflow_bin_linear(linear_bin_num)
+    unsigned int linear_bin_num;
+  CODE:
+    RETVAL = !!mh_hist_is_overflow_bin_linear(THIS, linear_bin_num);
+  OUTPUT: RETVAL
+
 void
 mh_histogram_t::_debug_bin_iter_print()
   CODE:
@@ -506,11 +521,4 @@ void
 mh_histogram_t::_debug_dump_data()
   CODE:
     mh_hist_debug_dump_data(THIS);
-
-## AV *
-## mh_histogram_t::foo()
-##   CODE:
-##   RETVAL = (AV*)sv_2mortal((SV*)newAV());
-##     double_ary_to_av(aTHX_ mh_hist_total_nbins(THIS), THIS->data, &RETVAL);
-##   OUTPUT: RETVAL
 
