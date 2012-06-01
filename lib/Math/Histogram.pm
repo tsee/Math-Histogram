@@ -41,7 +41,11 @@ Math::Histogram - N-dimensional histogramming library
 =head1 DESCRIPTION
 
 This Perl module wraps an n-dimensional histogramming library
-written in C.
+written in C. If all you are looking for is a regular one dimensional
+histogram, then consider other libraries such as L<Math::SimpleHisto::XS>
+first for simplicity and performance. This being said, some care has been
+taken to optimize the library for performance given a variable number
+of dimensions.
 
 =head1 SEE ALSO
 
