@@ -43,9 +43,40 @@ Math::Histogram - N-dimensional histogramming library
 This Perl module wraps an n-dimensional histogramming library
 written in C. If all you are looking for is a regular one dimensional
 histogram, then consider other libraries such as L<Math::SimpleHisto::XS>
-first for simplicity and performance. This being said, some care has been
+first for simplicity and performance. Some care has been
 taken to optimize the library for performance given a variable number
-of dimensions.
+of dimensions, but not knowing the number of dimensions statically
+makes for both somewhat inefficient algorithmic implementation as well as
+occasionally awkward APIs. For example, simply iterating through all
+bins of a 2D histogram -- a matrix -- is as simple as
+
+  # Pseudo-code
+  foreach my $ix (0..$nx-1) {
+    foreach my $iy (0..$ny-1) {
+      my $z = $matrix->get_bin_content([$ix, $iy]);
+    }
+  }
+
+If you don't know the number of dimensions statically, you need to do something
+like this (there are other ways to do it, too):
+
+  # Pseudo-code
+  my $coords = [(0) x $ndims];
+  foreach my $i (0..$unrolled_total_nbins-1) {
+    my $z = $ndimhisto->get_bin_content($coords);
+
+    my $i = 0;
+    ++$coords->[$i];
+    while ($i < $ndims
+           && $coords->[$i] >= $ndimhisto->get_axis($i)->nbins)
+    {
+      $coords->[$i] = 0;
+      ++$coords->[++$i];
+    }
+  }
+
+Not pretty, eh? Not fast either. So keep that in mind: Your application knows
+the number of dimensions, the histogramming library does not.
 
 =head1 SEE ALSO
 
