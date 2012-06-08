@@ -21,6 +21,15 @@ Math::Histogram::Axis - Object representing single histogram dimension
   
 =head1 DESCRIPTION
 
+An object of this class represents the binning information along one
+dimension of an N-dimensional histogram. A 1-D histogram will require
+one axis, a 2-D histogram two axises, etc. Axises can contain
+a number of equal-sized bins (also referred to as fixed-bin axises in
+other parts of the documentation) or a number of explicitly
+specified variable-width bins. Some of the algorithms, most notably
+the one for determining the bin number for a given coordinate,
+will be O(1) for fixed-width binning, but O(log(n)) for variable-width
+binning.
 
 =head1 SEE ALSO
 
