@@ -37,11 +37,42 @@ Math::Histogram - N-dimensional histogramming library
 =head1 SYNOPSIS
 
   use Math::Histogram;
+  my @dimensions = (
+    Math::Histogram::Axis->new(10, 0., 1.), # x: 10 bins between 0 and 1
+    Math::Histogram::Axis->new([1, 2, 4, 8, 16]), # y: 5 bins of variable size
+    Math::Histogram::Axis->new(2, -1., 1.), # z: 2 bins: [-1, 0) and [0, 1)
+  );
+  my $hist = Math::Histogram->new(\@dimensions);
+  
+  # Fill some primitive data
+  while (<>) {
+    chomp;
+    my @cols = split /\s+/, $_;
+    die "Invalid number of columns: " . scalar(@cols)
+      if @cols != 3;
+    # Insert new datum into histogram
+    $hist->fill(\@cols);
+  }
+  
+  # Dump histogram content to screen (excluding overflow)
+  for my $iz (1 .. $hist->get_axis(2)->nbins) {
+    for my $iy (1 .. $hist->get_axis(1)->nbins) {
+      for my $ix (1 .. $hist->get_axis(0)->nbins) {
+        print $hist->get_bin_content([$ix, $iy, $iz]), " ";
+      }
+      print "\n";
+    }
+    print "\n";
+  }
 
 =head1 DESCRIPTION
 
 This Perl module wraps an n-dimensional histogramming library
-written in C. If all you are looking for is a regular one dimensional
+written in C. 
+
+=head2 On N-Dimensional Histogramming
+
+If all you are looking for is a regular one dimensional
 histogram, then consider other libraries such as L<Math::SimpleHisto::XS>
 first for simplicity and performance. Some care has been
 taken to optimize the library for performance given a variable number
