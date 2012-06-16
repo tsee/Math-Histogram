@@ -43,6 +43,7 @@ Math::Histogram - N-dimensional histogramming library
     Math::Histogram::Axis->new(2, -1., 1.), # z: 2 bins: [-1, 0) and [0, 1)
   );
   my $hist = Math::Histogram->new(\@dimensions);
+  # FIXME cover make_histogram here, too
   
   # Fill some primitive data
   while (<>) {
@@ -107,7 +108,46 @@ like this (there are other ways to do it, too):
   }
 
 Not pretty, eh? Not fast either. So keep that in mind: Your application knows
-the number of dimensions, the histogramming library does not.
+the number of dimensions that you care about, this histogramming library does not.
+
+=head2 Overview
+
+Generally speaking, a histogram object in the context of this library
+contains N axis objects (axises 0 to N-1) that define the binning of each
+dimension. Below and above its coordinate range, each axis has an
+under- and an overflow bin. When you fill a histogram with data using
+the C<fill()> method, and the provided coordinates are outside the
+range of the histogram, then the data will be filled into the correct
+under- or overflow bin. For example, if you create a 2D histogram with
+the following axises:
+
+  my $h = Math::Histogram->new([
+    Math::Histogram::Axis->new(2, 0., 1.),
+    Math::Histogram::Axis->new(3, 0., 3.),
+  ]);
+
+  # Worst ASCII drawing the world has ever seen:
+  # +-+-+-+-+
+  # |:|.|.|:|
+  # +-+-+-+-+
+  # |.| | |.|
+  # +-+-+-+-+
+  # |.| | |.|  ^
+  # +-+-+-+-+  |
+  # |.| | |.|  |
+  # +-+-+-+-+  dimension 1
+  # |:|.|.|:|
+  # +-+-+-+-+
+  #   ---> dimension 0
+  # 
+  # Bins marked with . are under- or overflow in one dimension.
+  # Bins marked with : are under- or overflow in BOTH dimensions.
+
+Then you created a histogram with six normal bins: two bins in the X direction
+and three bins in the Y direction. On top of that, you get a ring of over- and
+underflow bins around your regular bins. In this case, there are a grand total of
+14 such over- and underflow bins. As you increase the number of bins in your actual
+histogram, the relative number of over- and underflow bins goes down.
 
 =head1 SEE ALSO
 
