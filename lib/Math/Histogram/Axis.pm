@@ -3,6 +3,8 @@ use strict;
 use warnings;
 use Math::Histogram ();
 
+# entire implementation in C, see XS.xs and mh_axis.h
+
 1;
 
 __END__
@@ -47,7 +49,9 @@ as the lower boundary of the first bin, the boundary between first
 and second bin, ... and finally the upper boundary of the last bin.
 Given N elements of the array reference, the axis will have N-1 bins.
 
-Bin numbers start at FIXME
+Bin numbers start at 1 since the bin with number 0 is the
+underflow bin which technically has the range (-Infty., min),
+so excluding the lower limit of the first bin.
 
 =head2 clone
 
@@ -75,6 +79,23 @@ that's simply C<$axis-E<gt>max - $axis-E<gt>min>.
 Given a bin number, returns the width of that bin. Defaults to '1',
 so for axis objects with fixed-width binning, calling this method without
 argument is valid.
+
+=head2 lower_boundary
+
+Given a bin number, returns the lower boundary of that bin.
+
+=head2 upper_boundary
+
+Given a bin number, returns the upper boundary of that bin.
+
+=head2 bin_center
+
+Given a bin number, returns the center of that bin.
+
+=head2 find_bin
+
+Given a coordinate, finds the bin number of the bin it lies in.
+Returns 0 for underflow and C<$nbins + 1> for overflow.
 
 =head1 SEE ALSO
 
