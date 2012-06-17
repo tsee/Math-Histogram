@@ -126,7 +126,7 @@ the following axises:
     Math::Histogram::Axis->new(3, 0., 3.),
   ]);
 
-  # Worst ASCII drawing the world has ever seen:
+  # Worst ASCII drawing ever:
   # +-+-+-+-+
   # |:|.|.|:|
   # +-+-+-+-+
@@ -143,13 +143,130 @@ the following axises:
   # Bins marked with . are under- or overflow in one dimension.
   # Bins marked with : are under- or overflow in BOTH dimensions.
 
-Then you created a histogram with six normal bins: two bins in the X direction
-and three bins in the Y direction. On top of that, you get a ring of over- and
-underflow bins around your regular bins. In this case, there are a grand total of
+Then you created a histogram with six regular bins: two bins in the X direction
+and three bins in the Y direction for a total of C<2 * 3 = 6>.
+On top of that, you get a ring of over- and underflow bins around your
+ordinary bins. In this case, there are a grand total of
 14 such over- and underflow bins. As you increase the number of bins in your actual
 histogram, the relative number of over- and underflow bins goes down.
 
+You can access histogram content both by the N-dimensional bin numbers (so,
+in the 2D example, an array reference containing two integers) or by user
+coordinates (eg. an array reference of two floating point numbers). The module
+provides facilities to determine the bin in which a particular set of coordinates
+falls. The lower boundary of a bin is always considered part of the bin, whereas
+the upper boundary is not. Internally, the histogram data is stored in a flat
+array since the dimensionality is unknown at compile time. The linear index
+into this array is what may be referred to as the "flat" or "linear" bin number.
+In a 1D histogram, it corresponds to the bin numbers of the only axis in the
+histogram.
+
+=head1 METHODS
+
+=head2 new
+
+Class method, constructor. Takes an array reference as first parameter. The array reference
+must contain one or more L<Math::Histogram::Axis> objects that define the binning
+in one dimension each. The number of axises determines the dimensionality of the
+histogram.
+
+=head2 clone
+
+Returns an exact clone of the histogram.
+
+=head2 new_alike
+
+Returns a clone of the histogram, but without its content.
+
+=head2 get_axis
+
+Given a dimension number (starting at 0), returns the axis object
+of that dimension.
+
+=head2 ndim
+
+Returns the number of dimensions in the histogram.
+
+=head2 total
+
+Returns the total content of the histogram. (The sum over all bins,
+except this is cached.)
+
+=head2 nfills
+
+Returns the number of fill operations that have been performed on the
+histogram so far. This is not the same as total unless all fills have
+a weight of 1.
+
+=head2 fill
+
+Given a reference to an array of coordinates, adds 1 to the content
+of the bin that the coordinates belong to.
+
+=head2 fill_w
+
+Same as C<fill()>, except that the second argument needs to be a
+weight, the number to add to the bin content (instead of incrementing
+by 1).
+
+=head2 fill_n
+
+Same as C<fill()>, except that the first parameter needs to be
+a reference to a nested array, each of the inner arrays
+containing a set of coordinates. In other words, this method works
+the same as calling C<fill()> repeatedly for each element in
+the outer array:
+
+  my @coords = (
+    [0.1, 0.2],
+    [3.8, -1.2],
+    ...
+  );
+  
+  $h->fill_n(\@coords);
+  
+  # Is the same as:
+  $h->fill($_) for @coords;
+  # Except a teeny bit faster.
+
+=head2 fill_nw
+
+This is to C<fill_w(\@coord, $weight)> what C<fill_n(\@coords)> is to C<fill(\@coord)>.
+In other words, the first argument is the same as for C<fill_n()>, the second is
+an array reference containing as many weights as the first had coordinate sets.
+
+=head2 fill_bin
+
+Same as C<fill()>, but takes an array reference containing bin numbers as argument
+(instead of a reference to an array of coordinates).
+
+=head2 fill_bin_w
+
+This is to C<fill_w> what C<fill_bin> is to C<fill>.
+
+=head2 fill_bin_n
+
+This is to C<fill_n> what C<fill_bin> is to C<fill>.
+
+=head2 fill_bin_nw
+
+This is to C<fill_nw> what C<fill_bin> is to C<fill>.
+
+=head2 get_bin_content
+
+Given a reference to an array of bin numbers, returns the content of the
+specified bin.
+
+=head2 find_bin_numbers
+
+Given a reference to an array of coordinates, returns a reference
+to an array of (the same number of) bin numbers that correspond to the
+bin that the coordinates fall into.
+
 =head1 SEE ALSO
+
+L<Math::Histogram::Axis>, which is part of this distribution,
+implements the binning for a histogram in a single dimension.
 
 L<Math::SimpleHisto::XS> is a fast 1D histogramming module.
 
