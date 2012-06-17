@@ -5,6 +5,7 @@
 #include <string.h>
 #include <float.h>
 #include <math.h>
+#include <limits.h>
 
 static unsigned int
 _mh_hist_compute_total_nbins(mh_histogram_t *hist)
@@ -320,6 +321,8 @@ unsigned int
 mh_hist_fill(mh_histogram_t *hist, double x[])
 {
   const unsigned int flat_bin = mh_hist_find_bin(hist, x);
+  if (flat_bin >= hist->nbins_total)
+    return UINT_MAX;
   hist->data[flat_bin] += 1;
   hist->total += 1;
   hist->nfills++;
@@ -331,6 +334,8 @@ unsigned int
 mh_hist_fill_bin(mh_histogram_t *hist, unsigned int dim_bins[])
 {
   const unsigned int flat_bin = mh_hist_flat_bin_number(hist, dim_bins);
+  if (flat_bin >= hist->nbins_total)
+    return UINT_MAX;
   hist->data[flat_bin] += 1;
   hist->total += 1;
   hist->nfills++;
@@ -342,6 +347,8 @@ unsigned int
 mh_hist_fill_w(mh_histogram_t *hist, double x[], double weight)
 {
   const unsigned int flat_bin = mh_hist_find_bin(hist, x);
+  if (flat_bin >= hist->nbins_total)
+    return UINT_MAX;
   hist->data[flat_bin] += weight;
   hist->total += weight;
   hist->nfills++;
@@ -353,6 +360,8 @@ unsigned int
 mh_hist_fill_bin_w(mh_histogram_t *hist, unsigned int dim_bins[], double weight)
 {
   const unsigned int flat_bin = mh_hist_flat_bin_number(hist, dim_bins);
+  if (flat_bin >= hist->nbins_total)
+    return UINT_MAX;
   hist->data[flat_bin] += weight;
   hist->total += weight;
   hist->nfills++;
@@ -367,6 +376,8 @@ mh_hist_fill_n(mh_histogram_t *hist, unsigned int n, double **xs)
   register unsigned int i;
   for (i = 0; i < n; ++i) {
     flat_bin = mh_hist_find_bin(hist, xs[i]);
+    if (flat_bin >= hist->nbins_total)
+      continue;
     hist->data[flat_bin] += 1;
   }
   hist->nfills += n;
@@ -381,6 +392,8 @@ mh_hist_fill_bin_n(mh_histogram_t *hist, unsigned int n, unsigned int **dim_bins
   register unsigned int i;
   for (i = 0; i < n; ++i) {
     flat_bin = mh_hist_flat_bin_number(hist, dim_bins[i]);
+    if (flat_bin >= hist->nbins_total)
+      continue;
     hist->data[flat_bin] += 1;
   }
   hist->nfills += n;
@@ -397,6 +410,8 @@ mh_hist_fill_nw(mh_histogram_t *hist, unsigned int n, double **xs, double weight
   for (i = 0; i < n; ++i) {
     w = weights[i];
     flat_bin = mh_hist_find_bin(hist, xs[i]);
+    if (flat_bin >= hist->nbins_total)
+      continue;
     hist->data[flat_bin] += w;
     hist->nfills += w;
     hist->total += w;
@@ -413,6 +428,8 @@ mh_hist_fill_bin_nw(mh_histogram_t *hist, unsigned int n, unsigned int **dim_bin
   for (i = 0; i < n; ++i) {
     w = weights[i];
     flat_bin = mh_hist_flat_bin_number(hist, dim_bins[i]);
+    if (flat_bin >= hist->nbins_total)
+      continue;
     hist->data[flat_bin] += w;
     hist->nfills += w;
     hist->total += w;
@@ -574,7 +591,7 @@ mh_hist_cumulate(mh_histogram_t *hist, unsigned int cumulation_dimension)
   unsigned int *bin_buffer;
 
   if (cumulation_dimension >= ndims)
-    return 0;
+    return -1;
 
   /* In a single dimension, the content of the i-th bin of the cumulative
    * histogram is the content of the i-1-th bin of the cumulative histogram
@@ -602,7 +619,7 @@ mh_hist_cumulate(mh_histogram_t *hist, unsigned int cumulation_dimension)
     }
   }
 
-  return 1;
+  return 0;
 }
 
 
@@ -641,12 +658,17 @@ mh_hist_debug_dump_data(mh_histogram_t *hist)
 int
 mh_hist_is_overflow_bin(mh_histogram_t *hist, unsigned int dim_bins[])
 {
-  return MH_BITFIELD_GET(hist->overflow_bin_bitfield, mh_hist_flat_bin_number(hist, dim_bins));
+  const unsigned int flat_bin = mh_hist_flat_bin_number(hist, dim_bins);
+  if (flat_bin >= hist->nbins_total)
+    return 0;
+  return MH_BITFIELD_GET(hist->overflow_bin_bitfield, flat_bin);
 }
 
 int
 mh_hist_is_overflow_bin_linear(mh_histogram_t *hist, unsigned int linear_bin_num)
 {
+  if (linear_bin_num >= hist->nbins_total)
+    return 0;
   return MH_BITFIELD_GET(hist->overflow_bin_bitfield, linear_bin_num);
 }
 

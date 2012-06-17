@@ -245,6 +245,8 @@ mh_histogram_t::get_axis(unsigned int dimension)
   PREINIT:
     const char *CLASS = "Math::Histogram::Axis";
   CODE:
+    if (dimension >= MH_HIST_NDIM(THIS))
+      croak("Dimension number out of bounds: %u", dimension);
     RETVAL = MH_HIST_AXIS(THIS, dimension);
   OUTPUT: RETVAL
 
@@ -496,8 +498,12 @@ mh_histogram_t::contract_dimension(contracted_dimension)
 void
 mh_histogram_t::cumulate(cumulation_dimension)
     unsigned int cumulation_dimension;
+  PREINIT:
+    int rc;
   CODE:
-    mh_hist_cumulate(THIS, cumulation_dimension);
+    rc = mh_hist_cumulate(THIS, cumulation_dimension);
+    if (rc != 0)
+      croak("Cumulated dimension appears to be out of range!");
 
 int
 mh_histogram_t::data_equal_to(other)

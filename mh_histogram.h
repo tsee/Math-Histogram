@@ -101,7 +101,8 @@ int mh_hist_is_overflow_bin_linear(mh_histogram_t *hist, unsigned int linear_bin
  * Histogram data operations
  */
 
-/* Adds 1 to the bin at the coordinates x */
+/* Adds 1 to the bin at the coordinates x, returns flat bin number
+ * or UINT_MAX if out of bounds. */
 unsigned int mh_hist_fill(mh_histogram_t *hist, double x[]);
 
 /* Adds 1 to each bin at each of the coordinates in xs.
@@ -109,7 +110,8 @@ unsigned int mh_hist_fill(mh_histogram_t *hist, double x[]);
  * xs[1][0] would be the first coordinate of the second coordinate set. */
 void mh_hist_fill_n(mh_histogram_t *hist, unsigned int n, double **xs);
 
-/* Adds "weight" to the bin at the coordinates x. */
+/* Adds "weight" to the bin at the coordinates x. Returns flat bin number
+ * or UINT_MAX if out of bounds. */
 unsigned int mh_hist_fill_w(mh_histogram_t *hist, double x[], double weight);
 
 /* Adds weights[i] to each of the bins at the coordinates in xs (see mh_hist_fill_n) */
@@ -145,7 +147,7 @@ mh_histogram_t *mh_hist_contract_dimension(mh_histogram_t *hist, unsigned int co
 
 /* Transforms the given histogram into a cumulative histogram in the provided dimension
  * by summing over the values in that dimension as H[i] = sum(j=0..i, H[j]).
- * Returns 1 if successful, 0 otherwise (cumulation_dimension out of range).
+ * Returns 0 if successful, -1 otherwise (cumulation_dimension out of range).
  */
 int mh_hist_cumulate(mh_histogram_t *hist, unsigned int cumulation_dimension);
 
