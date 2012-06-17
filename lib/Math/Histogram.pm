@@ -255,13 +255,63 @@ This is to C<fill_nw> what C<fill_bin> is to C<fill>.
 =head2 get_bin_content
 
 Given a reference to an array of bin numbers, returns the content of the
-specified bin.
+specified bin. Throws an exception when out of bounds.
 
 =head2 find_bin_numbers
 
 Given a reference to an array of coordinates, returns a reference
 to an array of (the same number of) bin numbers that correspond to the
 bin that the coordinates fall into.
+
+=head2 contract_dimension
+
+Given a dimension number (starting at 0), creates an N-1 dimensional
+histogram that contains the original data, but with the specified
+dimension contracted. The original histogram is untouched. Throws
+an exception if the dimension is out of bounds.
+
+=head2 cumulate
+
+Given a dimension number (starting at 0), cumulates along that dimension,
+modifying the input histogram.
+Throws an exception if the dimension is out of bounds. Example:
+
+  X ->
+  
+  1 2 3  ^
+  4 5 6  |
+  7 8 9  Y
+
+Cumulated along X, the result is:
+
+  1 3  6
+  4 9  15
+  7 15 24
+
+Cumulated along Y instead, the result is (note direction
+of Y axis in example):
+
+  12 15 18
+  11 13 15
+  7  8  9
+
+=head2 data_equal_to
+
+Given another histogram, returns true if the data content
+is equal to the invocant's data. Uses your machine
+C<DBL_EPSILON> for floating point comparisons.
+
+=head2 is_overflow_bin
+
+Given a set of bin numbers, returns true if the bin is an under-
+or overflow bin, false otherwise. This is O(n) in the number
+of dimensions, but O(1) in the number of bins in the histogram.
+
+=head2 is_overflow_bin_linear
+
+Given a linear bin number, returns true if the bin is an under-
+or overflow bin, false otherwise. This is O(1) in the number
+of dimensions and the number of bins in the histogram.
 
 =head1 SEE ALSO
 
