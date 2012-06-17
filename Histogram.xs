@@ -38,6 +38,8 @@
 
 MODULE = Math::Histogram    PACKAGE = Math::Histogram
 
+PROTOTYPES: DISABLE
+
 REQUIRE: 2.21
 
 MODULE = Math::Histogram    PACKAGE = Math::Histogram::Axis
@@ -456,9 +458,13 @@ mh_histogram_t::fill_bin_nw(dim_bin_nums, weights)
 double
 mh_histogram_t::get_bin_content(dim_bin_nums)
     AV *dim_bin_nums;
+  PREINIT:
+    int rc;
   CODE:
     av_to_unsigned_int_ary(aTHX_ dim_bin_nums, MH_HIST_ARG_BIN_BUFFER(THIS));
-    RETVAL = mh_hist_get_bin_content(THIS, MH_HIST_ARG_BIN_BUFFER(THIS));
+    rc = mh_hist_get_bin_content(THIS, MH_HIST_ARG_BIN_BUFFER(THIS), &RETVAL);
+    if (rc != 0)
+      croak("Bin numbers out of range!");
   OUTPUT: RETVAL
 
 
@@ -466,9 +472,13 @@ void
 mh_histogram_t::set_bin_content(dim_bin_nums, content)
     AV *dim_bin_nums;
     double content;
+  PREINIT:
+    int rc;
   CODE:
     av_to_unsigned_int_ary(aTHX_ dim_bin_nums, MH_HIST_ARG_BIN_BUFFER(THIS));
-    mh_hist_set_bin_content(THIS, MH_HIST_ARG_BIN_BUFFER(THIS), content);
+    rc = mh_hist_set_bin_content(THIS, MH_HIST_ARG_BIN_BUFFER(THIS), content);
+    if (rc != 0)
+      croak("Bin numbers out of range!");
 
 
 mh_histogram_t *

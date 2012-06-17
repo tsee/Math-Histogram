@@ -420,20 +420,32 @@ mh_hist_fill_bin_nw(mh_histogram_t *hist, unsigned int n, unsigned int **dim_bin
 }
 
 
-void
+int
 mh_hist_set_bin_content(mh_histogram_t *hist, unsigned int dim_bins[], double content)
 {
-  unsigned int flat_bin = mh_hist_flat_bin_number(hist, dim_bins);
-  double old = hist->data[flat_bin];
+  const unsigned int flat_bin = mh_hist_flat_bin_number(hist, dim_bins);
+  double old;
+  if (flat_bin >= hist->nbins_total)
+    return -1;
+  old = hist->data[flat_bin];
   hist->data[flat_bin] = content;
   hist->total += content - old;
+  return 0;
 }
 
 
-double
-mh_hist_get_bin_content(mh_histogram_t *hist, unsigned int dim_bins[])
+int
+mh_hist_get_bin_content(mh_histogram_t *hist, unsigned int dim_bins[], double *content)
 {
-  return hist->data[mh_hist_flat_bin_number(hist, dim_bins)];
+  const unsigned int flat_bin = mh_hist_flat_bin_number(hist, dim_bins);
+  if (flat_bin >= hist->nbins_total) {
+    content = NULL;
+    return -1;
+  }
+  else {
+    *content = hist->data[flat_bin];
+    return 0;
+  }
 }
 
 
