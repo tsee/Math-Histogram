@@ -65,7 +65,7 @@ mh_axis_t::new(...)
 
       RETVAL = mh_axis_create( n-1, MH_AXIS_OPT_VARBINS );
       if (RETVAL == NULL)
-        croak("Cannot create Math::Histogram::Axis! Invalid bin number or out of memory.");
+        croak("Cannot create Math::Histogram::Axis! Invalid number of bins or out of memory.");
 
       av_to_double_ary(aTHX_ bins, RETVAL->bins);
 
@@ -85,7 +85,7 @@ mh_axis_t::new(...)
     else if (items == 4) {
       RETVAL = mh_axis_create( SvUV(ST(1)), MH_AXIS_OPT_FIXEDBINS );
       if (RETVAL == NULL)
-        croak("Cannot create Math::Histogram::Axis! Invalid bin number or out of memory.");
+        croak("Cannot create Math::Histogram::Axis! Invalid number of bins or out of memory.");
       prev = SvNV(ST(2));
       if (prev >= SvNV(ST(3))) {
         mh_axis_free(RETVAL);
@@ -102,6 +102,84 @@ mh_axis_t::DESTROY()
     /* free only if not owned by some histogram */
     if (!( PTR2UV(MH_AXIS_USERDATA(THIS)) & F_AXIS_OWNED_BY_HIST ))
       mh_axis_free(THIS);
+
+
+void
+mh_axis_t::_as_hash()
+  PREINIT:
+    SV *rv;
+    HV *hash;
+  PPCODE:
+    /* FIXME test this */
+    hash = newHV();
+    rv = sv_2mortal(newRV_noinc((SV *)hash));
+    if (MH_AXIS_ISFIXBIN(THIS)) {
+      assert( hv_stores(hash, "nbins", newSVuv(MH_AXIS_NBINS(THIS))) );
+      assert( hv_stores(hash, "min", newSVnv(MH_AXIS_MIN(THIS))) );
+      assert( hv_stores(hash, "max", newSVnv(MH_AXIS_MAX(THIS))) );
+    }
+    else {
+      unsigned int i, n;
+      AV *bin_av;
+      double *bins = THIS->bins;
+      n = MH_AXIS_NBINS(THIS);
+      bin_av = newAV();
+      assert( hv_stores(hash, "bins", newRV_noinc((SV *)bin_av)) );
+      av_extend(bin_av, n);
+      for (i = 0; i <= n; ++i)
+        av_store(bin_av, i, newSVnv(bins[i]));
+    }
+    XPUSHs(rv);
+    XSRETURN(1);
+
+
+mh_axis_t *
+_from_hash(CLASS, hash)
+    char *CLASS;
+    HV *hash;
+  PREINIT:
+    unsigned int nbins;
+    SV *tmp;
+    SV **svptr;
+  CODE:
+    /* FIXME test this */
+    if (hv_exists(hash, "bins", 4)) { /* varbins */
+      AV *bin_av;
+      tmp = *hv_fetchs(hash, "bins", 0);
+      DEREF_RV_TO_AV(bin_av, tmp);
+      nbins = av_len(bin_av);
+      RETVAL = mh_axis_create( nbins, MH_AXIS_OPT_VARBINS );
+      if (RETVAL == NULL)
+        croak("Cannot create Math::Histogram::Axis! Invalid number of bins or out of memory.");
+      av_to_double_ary(aTHX_ bin_av, RETVAL->bins);
+      /* FIXME include same bin order sanity check as for the normal constructor? */
+      mh_axis_init( RETVAL, RETVAL->bins[0], RETVAL->bins[nbins] );
+    }
+    else { /* fixed width bins */
+      double min, max;
+      svptr = hv_fetchs(hash, "nbins", 0);
+      if (svptr == NULL)
+        croak("Missing 'bins' and 'nbins' hash entries");
+      nbins = SvUV(*svptr);
+      svptr = hv_fetchs(hash, "min", 0);
+      if (svptr == NULL)
+        croak("Missing 'min' hash entry");
+      min = SvNV(*svptr);
+      svptr = hv_fetchs(hash, "max", 0);
+      if (svptr == NULL)
+        croak("Missing 'max' hash entry");
+      max = SvNV(*svptr);
+      if (min > max) {
+        double tmp = min;
+        min = max;
+        max = tmp;
+      }
+      RETVAL = mh_axis_create( nbins, MH_AXIS_OPT_FIXEDBINS );
+      if (RETVAL == NULL)
+        croak("Cannot create Math::Histogram::Axis! Invalid bin number or out of memory.");
+      mh_axis_init( RETVAL, min, max );
+    }
+  OUTPUT: RETVAL
 
 
 mh_axis_t *
@@ -179,9 +257,6 @@ mh_axis_t::find_bin(double x)
   CODE:
     RETVAL = mh_axis_find_bin(THIS, x);
   OUTPUT: RETVAL
-
-
-
 
 MODULE = Math::Histogram    PACKAGE = Math::Histogram
 
@@ -537,4 +612,3 @@ void
 mh_histogram_t::_debug_dump_data()
   CODE:
     mh_hist_debug_dump_data(THIS);
-
