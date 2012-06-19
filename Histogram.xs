@@ -32,6 +32,34 @@
  * scope. */
 #define F_AXIS_OWNED_BY_HIST 1
 
+static SV *
+axis_to_hashref(pTHX_ mh_axis_t *axis)
+{
+  SV *rv;
+  HV *hash;
+  hash = newHV();
+
+  if (MH_AXIS_ISFIXBIN(axis)) {
+    assert( hv_stores(hash, "nbins", newSVuv(MH_AXIS_NBINS(axis))) );
+    assert( hv_stores(hash, "min", newSVnv(MH_AXIS_MIN(axis))) );
+    assert( hv_stores(hash, "max", newSVnv(MH_AXIS_MAX(axis))) );
+  }
+  else {
+    unsigned int i, n;
+    AV *bin_av;
+    double *bins = axis->bins;
+    n = MH_AXIS_NBINS(axis);
+    bin_av = newAV();
+    assert( hv_stores(hash, "bins", newRV_noinc((SV *)bin_av)) );
+    av_extend(bin_av, n);
+    for (i = 0; i <= n; ++i)
+      av_store(bin_av, i, newSVnv(bins[i]));
+  }
+  rv = newRV_noinc((SV *)hash);
+
+  return rv;
+}
+
 /*
  * FIXME This file has a bunch of hardcoded class names for non-constructor methods
  *       that return objects. That needs to be fixed!
@@ -109,27 +137,8 @@ void
 mh_axis_t::_as_hash()
   PREINIT:
     SV *rv;
-    HV *hash;
   PPCODE:
-    /* FIXME test this */
-    hash = newHV();
-    if (MH_AXIS_ISFIXBIN(THIS)) {
-      assert( hv_stores(hash, "nbins", newSVuv(MH_AXIS_NBINS(THIS))) );
-      assert( hv_stores(hash, "min", newSVnv(MH_AXIS_MIN(THIS))) );
-      assert( hv_stores(hash, "max", newSVnv(MH_AXIS_MAX(THIS))) );
-    }
-    else {
-      unsigned int i, n;
-      AV *bin_av;
-      double *bins = THIS->bins;
-      n = MH_AXIS_NBINS(THIS);
-      bin_av = newAV();
-      assert( hv_stores(hash, "bins", newRV_noinc((SV *)bin_av)) );
-      av_extend(bin_av, n);
-      for (i = 0; i <= n; ++i)
-        av_store(bin_av, i, newSVnv(bins[i]));
-    }
-    rv = sv_2mortal(newRV_noinc((SV *)hash));
+    rv = sv_2mortal(axis_to_hashref(aTHX_ THIS));
     XPUSHs(rv);
     XSRETURN(1);
 
@@ -613,3 +622,49 @@ void
 mh_histogram_t::_debug_dump_data()
   CODE:
     mh_hist_debug_dump_data(THIS);
+
+void
+mh_histogram_t::_as_hash()
+  PREINIT:
+    SV *rv;
+    SV *tmp;
+    HV *hash;
+    AV *axis_av;
+    AV *data_av;
+    unsigned int ndim, i, nbins_total;
+    double *data;
+  PPCODE:
+    /* FIXME test and write undumper! */
+    hash = newHV();
+    rv = sv_2mortal(newRV_noinc((SV *)hash));
+
+    ndim = MH_HIST_NDIM(THIS);
+    assert( hv_stores(hash, "ndim", newSVuv(ndim)) );
+
+    /* store axises */
+    axis_av = newAV();
+    assert( hv_stores(hash, "axises", newRV_noinc((SV *)axis_av)) );
+    av_extend(axis_av, ndim-1);
+    for (i = 0; i < ndim; ++i) {
+      tmp = axis_to_hashref(aTHX_ MH_HIST_AXIS(THIS, i));
+      av_store(axis_av, i, tmp);
+    }
+
+    assert( hv_stores(hash, "nfills", newSVuv(MH_HIST_NFILLS(THIS))) );
+    assert( hv_stores(hash, "total", newSVnv(MH_HIST_TOTAL(THIS))) );
+
+    /* store data */
+    /* FIXME: strictly speaking, this violates encapsulation */
+    nbins_total = THIS->nbins_total;
+    data_av = newAV();
+    assert( hv_stores(hash, "data", newRV_noinc((SV *)data_av)) );
+    av_extend(data_av, nbins_total-1);
+    data = THIS->data;
+    for (i = 0; i < nbins_total; ++i)
+      av_store(data_av, i, newSVnv(data[i]));
+
+    XPUSHs(rv);
+    XSRETURN(1);
+
+
+
