@@ -3,6 +3,7 @@
 #include "perl.h"
 #include "XSUB.h"
 
+#include "assert.h"
 #include "ppport.h"
 
 #include "perl_type_tools.h"
@@ -112,7 +113,6 @@ mh_axis_t::_as_hash()
   PPCODE:
     /* FIXME test this */
     hash = newHV();
-    rv = sv_2mortal(newRV_noinc((SV *)hash));
     if (MH_AXIS_ISFIXBIN(THIS)) {
       assert( hv_stores(hash, "nbins", newSVuv(MH_AXIS_NBINS(THIS))) );
       assert( hv_stores(hash, "min", newSVnv(MH_AXIS_MIN(THIS))) );
@@ -129,6 +129,7 @@ mh_axis_t::_as_hash()
       for (i = 0; i <= n; ++i)
         av_store(bin_av, i, newSVnv(bins[i]));
     }
+    rv = sv_2mortal(newRV_noinc((SV *)hash));
     XPUSHs(rv);
     XSRETURN(1);
 

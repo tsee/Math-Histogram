@@ -57,10 +57,11 @@ WriteMakefile(
     VERSION_FROM      => 'lib/Math/Histogram.pm', # finds $VERSION
     PREREQ_PM         => {
       'ExtUtils::ParseXS' => '2.21',
-      'Test::More' => '0.94',
-      'File::Spec' => '0',
-      'Capture::Tiny' => '0',
-      'Getopt::Long' => '0', # FIXME move to CONFIGURE_REQUIRES at some point
+      'Test::More'        => '0.94',
+      'File::Spec'        => '0',
+      'Capture::Tiny'     => '0',
+      'Getopt::Long'      => '0', # FIXME move to CONFIGURE_REQUIRES at some point
+      'JSON::XS'          => '0',
     },
     ($] >= 5.005 ?
       (ABSTRACT_FROM  => 'lib/Math/Histogram.pm', # retrieve abstract from module
