@@ -71,6 +71,11 @@ Math::Histogram - N-dimensional histogramming library
 This Perl module wraps an n-dimensional histogramming library
 written in C. 
 
+B<Beware, this is an early release. While the basic functionality is rather
+well tested, the library has not been used in production. If you intend to
+adopt it for production, please test your application well and get in touch
+with the author.>
+
 =head2 On N-Dimensional Histogramming
 
 If all you are looking for is a regular one dimensional
