@@ -60,6 +60,56 @@ axis_to_hashref(pTHX_ mh_axis_t *axis)
   return rv;
 }
 
+static mh_axis_t *
+hash_to_axis(pTHX_ HV *hash)
+{
+  unsigned int nbins;
+  SV *tmp;
+  SV **svptr;
+  mh_axis_t *rv;
+
+  if (hv_exists(hash, "bins", 4)) { /* varbins */
+    AV *bin_av;
+    tmp = *hv_fetchs(hash, "bins", 0);
+    DEREF_RV_TO_AV(bin_av, tmp);
+    if (bin_av == NULL)
+      croak("'bins' entry is not an array reference");
+    nbins = av_len(bin_av);
+    rv = mh_axis_create( nbins, MH_AXIS_OPT_VARBINS );
+    if (rv == NULL)
+      croak("Cannot create Math::Histogram::Axis! Invalid number of bins or out of memory.");
+    av_to_double_ary(aTHX_ bin_av, rv->bins);
+    /* FIXME include same bin order sanity check as for the normal constructor? */
+    mh_axis_init( rv, rv->bins[0], rv->bins[nbins] );
+  }
+  else { /* fixed width bins */
+    double min, max;
+    svptr = hv_fetchs(hash, "nbins", 0);
+    if (svptr == NULL)
+      croak("Missing 'bins' and 'nbins' hash entries");
+    nbins = SvUV(*svptr);
+    svptr = hv_fetchs(hash, "min", 0);
+    if (svptr == NULL)
+      croak("Missing 'min' hash entry");
+    min = SvNV(*svptr);
+    svptr = hv_fetchs(hash, "max", 0);
+    if (svptr == NULL)
+      croak("Missing 'max' hash entry");
+    max = SvNV(*svptr);
+    if (min > max) {
+      double tmp = min;
+      min = max;
+      max = tmp;
+    }
+    rv = mh_axis_create( nbins, MH_AXIS_OPT_FIXEDBINS );
+    if (rv == NULL)
+      croak("Cannot create Math::Histogram::Axis! Invalid bin number or out of memory.");
+    mh_axis_init( rv, min, max );
+  }
+
+  return rv;
+}
+
 /*
  * FIXME This file has a bunch of hardcoded class names for non-constructor methods
  *       that return objects. That needs to be fixed!
@@ -147,48 +197,8 @@ mh_axis_t *
 _from_hash(CLASS, hash)
     char *CLASS;
     HV *hash;
-  PREINIT:
-    unsigned int nbins;
-    SV *tmp;
-    SV **svptr;
   CODE:
-    /* FIXME test this */
-    if (hv_exists(hash, "bins", 4)) { /* varbins */
-      AV *bin_av;
-      tmp = *hv_fetchs(hash, "bins", 0);
-      DEREF_RV_TO_AV(bin_av, tmp);
-      nbins = av_len(bin_av);
-      RETVAL = mh_axis_create( nbins, MH_AXIS_OPT_VARBINS );
-      if (RETVAL == NULL)
-        croak("Cannot create Math::Histogram::Axis! Invalid number of bins or out of memory.");
-      av_to_double_ary(aTHX_ bin_av, RETVAL->bins);
-      /* FIXME include same bin order sanity check as for the normal constructor? */
-      mh_axis_init( RETVAL, RETVAL->bins[0], RETVAL->bins[nbins] );
-    }
-    else { /* fixed width bins */
-      double min, max;
-      svptr = hv_fetchs(hash, "nbins", 0);
-      if (svptr == NULL)
-        croak("Missing 'bins' and 'nbins' hash entries");
-      nbins = SvUV(*svptr);
-      svptr = hv_fetchs(hash, "min", 0);
-      if (svptr == NULL)
-        croak("Missing 'min' hash entry");
-      min = SvNV(*svptr);
-      svptr = hv_fetchs(hash, "max", 0);
-      if (svptr == NULL)
-        croak("Missing 'max' hash entry");
-      max = SvNV(*svptr);
-      if (min > max) {
-        double tmp = min;
-        min = max;
-        max = tmp;
-      }
-      RETVAL = mh_axis_create( nbins, MH_AXIS_OPT_FIXEDBINS );
-      if (RETVAL == NULL)
-        croak("Cannot create Math::Histogram::Axis! Invalid bin number or out of memory.");
-      mh_axis_init( RETVAL, min, max );
-    }
+    RETVAL = hash_to_axis(aTHX_ hash);
   OUTPUT: RETVAL
 
 
@@ -634,7 +644,6 @@ mh_histogram_t::_as_hash()
     unsigned int ndim, i, nbins_total;
     double *data;
   PPCODE:
-    /* FIXME test and write undumper! */
     hash = newHV();
     rv = sv_2mortal(newRV_noinc((SV *)hash));
 
@@ -667,4 +676,70 @@ mh_histogram_t::_as_hash()
     XSRETURN(1);
 
 
+mh_histogram_t *
+_from_hash_internal(CLASS, hash)
+    char *CLASS;
+    HV *hash;
+  PREINIT:
+    mh_axis_t **axis_structs;
+    unsigned int i, n, ndim, nfill;
+    double total_content;
+    double *data;
+    SV **svptr;
+    AV *axis_av;
+    AV *data_av;
+  CODE:
+    /* dimensionality */
+    HV_FETCHS_FATAL(svptr, hash, "ndim");
+    ndim = SvUV( *svptr );
+    if (ndim < 1)
+      croak("Need at least a dimension of 1");
+
+    /* nfills and total */
+    HV_FETCHS_FATAL(svptr, hash, "nfills");
+    nfill = SvUV( *svptr );
+    HV_FETCHS_FATAL(svptr, hash, "total");
+    total_content = SvNV( *svptr );
+
+    /* data array */
+    HV_FETCHS_FATAL(svptr, hash, "data");
+    DEREF_RV_TO_AV(data_av, *svptr);
+    if (data_av == NULL)
+      croak("'data' entry is not an array reference");
+
+    /* axises */
+    HV_FETCHS_FATAL(svptr, hash, "axises");
+    DEREF_RV_TO_AV(axis_av, *svptr);
+    if (axis_av == NULL)
+      croak("'axises' entry is not an array reference");
+
+    n = av_len(axis_av)+1;
+    if (n != ndim)
+      croak("Number of axises needs to be same as number of dimensions");
+
+    axis_structs = av_to_axis_ary(aTHX_ axis_av, n);
+    if (axis_structs == NULL)
+      croak("Need array reference of axis objetcs");
+
+    /* make output struct */
+    RETVAL = mh_hist_create(ndim, axis_structs);
+    RETVAL->nfills = nfill;
+    RETVAL->total = total_content;
+
+    /* fill data */
+    n = RETVAL->nbins_total;
+    if ((unsigned int)(av_len(data_av)+1) != n) {
+      free(RETVAL);
+      croak("Input data array length (%u) is not the same as the total number of bins in the histogram (%u)", av_len(data_av)+1, n);
+    }
+    data = RETVAL->data;
+    for (i = 0; i < n; ++i) {
+      svptr = av_fetch(data_av, i, 0);
+      if (svptr == NULL) {
+        free(RETVAL);
+        croak("Failed to fetch scalar from array!?");
+      }
+      data[i] = SvNV(*svptr);
+    }
+  OUTPUT: RETVAL
 

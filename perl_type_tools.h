@@ -12,6 +12,12 @@
                   av = NULL; \
         } STMT_END
 
+#define HV_FETCHS_FATAL(svptr, hv, key) \
+        STMT_START { \
+                svptr = hv_fetchs(hv, key, 0); \
+                if (svptr == NULL) \
+                  croak("Failed to get key '%s' from hash", key); \
+        } STMT_END
 
 STATIC void
 av_to_double_ary(pTHX_ AV *in, double *out)

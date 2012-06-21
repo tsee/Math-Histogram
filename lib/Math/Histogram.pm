@@ -26,6 +26,26 @@ sub make_histogram {
   return Math::Histogram->new(\@axises);
 }
 
+sub _from_hash {
+  my ($class, $hashref) = @_;
+  my $axises_in = $hashref->{axises};
+  if (not ref($axises_in) eq 'ARRAY') {
+    croak("Need 'axises' hash element as an array reference");
+  }
+  my $axises = [];
+  push @$axises, Math::Histogram::Axis->_from_hash($_) for @$axises_in;
+  $hashref->{axises} = $axises;
+  my $obj;
+  eval { $obj = $class->_from_hash_internal($hashref); 1 }
+  or do {
+    $hashref->{axises} = $axises_in;
+    die $@;
+  };
+
+  $hashref->{axises} = $axises_in;
+  return $obj;
+}
+
 
 1;
 __END__
