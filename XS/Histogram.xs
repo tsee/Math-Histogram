@@ -363,6 +363,7 @@ mh_histogram_t::_as_hash()
     AV *data_av;
     unsigned int ndim, i, nbins_total;
     double *data;
+    mh_axis_t *tmp_axis;
   PPCODE:
     hash = newHV();
     rv = sv_2mortal(newRV_noinc((SV *)hash));
@@ -375,6 +376,7 @@ mh_histogram_t::_as_hash()
     assert( hv_stores(hash, "axises", newRV_noinc((SV *)axis_av)) );
     av_extend(axis_av, ndim-1);
     for (i = 0; i < ndim; ++i) {
+      tmp_axis = MH_HIST_AXIS(THIS, i);
       tmp = axis_to_hashref(aTHX_ MH_HIST_AXIS(THIS, i));
       av_store(axis_av, i, tmp);
     }
@@ -397,9 +399,10 @@ mh_histogram_t::_as_hash()
 
 
 mh_histogram_t *
-_from_hash_internal(CLASS, hash)
+_from_hash_internal(CLASS, hash, axises)
     char *CLASS;
     HV *hash;
+    AV *axises;
   PREINIT:
     mh_axis_t **axis_structs;
     unsigned int i, n, ndim, nfill;
@@ -428,18 +431,19 @@ _from_hash_internal(CLASS, hash)
       croak("'data' entry is not an array reference");
 
     /* axises */
-    HV_FETCHS_FATAL(svptr, hash, "axises");
-    DEREF_RV_TO_AV(axis_av, *svptr);
-    if (axis_av == NULL)
-      croak("'axises' entry is not an array reference");
-
-    n = av_len(axis_av)+1;
+    n = av_len(axises)+1;
     if (n != ndim)
       croak("Number of axises needs to be same as number of dimensions");
 
-    axis_structs = av_to_axis_ary(aTHX_ axis_av, n);
+    axis_structs = av_to_axis_ary(aTHX_ axises, n);
     if (axis_structs == NULL)
       croak("Need array reference of axis objetcs");
+    /* Mark the fresh axises as owned by the histogram */
+    for (i = 0; i < n; ++i) {
+      UV flags = PTR2UV(MH_AXIS_USERDATA(axis_structs[i]));
+      flags |= F_AXIS_OWNED_BY_HIST;
+      MH_AXIS_USERDATA(axis_structs[i]) = INT2PTR(void *, flags);
+    }
 
     /* make output struct */
     RETVAL = mh_hist_create(ndim, axis_structs);

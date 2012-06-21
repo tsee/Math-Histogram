@@ -7,7 +7,7 @@ use File::Spec;
 BEGIN { push @INC, -d "t" ? File::Spec->catdir(qw(t lib)) : "lib"; }
 use Math::Histogram::Test;
 
-my @axis_specs = ([2, 0., 1.], [100, 0., 1.], [[1., 2., 3., 4., 5.]]);
+my @axis_specs = ([2, 0., 1.], [23, 0., 1.], [[1., 2., 3., 4., 5.]]);
 
 my $h = make_histogram(@axis_specs);
 my $hash = $h->_as_hash;
@@ -15,6 +15,12 @@ ok(ref($hash) eq 'HASH');
 #use Data::Dumper; warn Dumper $hash;
 my $h2 = Math::Histogram->_from_hash($hash);
 histogram_eq($h2, $h, "histogram copied via hash conversion");
+my $json = $h->serialize;
+ok($json && $json =~ /^\{/);
+my $h3 = Math::Histogram->deserialize($json);
+my $h4 = Math::Histogram->deserialize(\$json);
+histogram_eq($h3, $h, "histogram copied via JSON serialization");
+histogram_eq($h4, $h, "histogram copied via JSON serialization, using reference");
 
 done_testing();
 
