@@ -5,7 +5,7 @@ use warnings;
 use Carp qw(croak);
 use JSON::XS ();
 
-our $VERSION = '1.00';
+our $VERSION = '1.01';
 
 require XSLoader;
 XSLoader::load('Math::Histogram', $VERSION);
