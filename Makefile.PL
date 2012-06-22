@@ -62,6 +62,7 @@ WriteMakefile(
       'Capture::Tiny'     => '0',
       'Getopt::Long'      => '0', # FIXME move to CONFIGURE_REQUIRES at some point
       'JSON::XS'          => '0',
+      'Data::Dumper'      => '0',
     },
     ($] >= 5.005 ?
       (ABSTRACT_FROM  => 'lib/Math/Histogram.pm', # retrieve abstract from module
