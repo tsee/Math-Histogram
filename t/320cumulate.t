@@ -192,7 +192,8 @@ sub cumulate {
   for my $i ( 0 .. $#$coord ) {
     my $adjacent = [ @$coord ];
     next if --$adjacent->[$i] < 0;
-    $sum += lookup($out, $adjacent) // cumulate($in, $out, $adjacent);
+    my $l = lookup($out, $adjacent);
+    $sum += defined($l) ? $l : cumulate($in, $out, $adjacent);
   }
   # update the output cumulation matrix
   assign($sum, $out, $coord);
