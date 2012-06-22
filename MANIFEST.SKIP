@@ -49,3 +49,7 @@ t\.pl$
 \B\.DS_Store
 #   Mac OSX SMB mount metadata files
 \B\._
+
+ctest/100axis
+ctest/200histogram
+ctest/210histofill
