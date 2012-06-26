@@ -1,5 +1,8 @@
 Revision history for Perl extension Math::Histogram.
 
+1.03  Tue Jun 26 07:30:00 2012
+  - Test fixes
+
 1.02  Sun Jun 24 19:30:00 2012
   - Distribution fixes
 
