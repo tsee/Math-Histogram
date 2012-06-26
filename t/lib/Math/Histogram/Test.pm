@@ -76,8 +76,8 @@ sub is_approx {
   $r = "<undef>" if not defined $r;
   my $ok = ok(
     !$is_undef
-    && $l+1e-15 > $r
-    && $l-1e-15 < $r,
+    && $l+1e-9 > $r
+    && $l-1e-9 < $r,
     $m
   );
   note("'$m' failed: $l != $r") if not $ok;
