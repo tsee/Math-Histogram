@@ -369,11 +369,12 @@ mh_histogram_t::_as_hash()
     rv = sv_2mortal(newRV_noinc((SV *)hash));
 
     ndim = MH_HIST_NDIM(THIS);
-    assert( hv_stores(hash, "ndim", newSVuv(ndim)) );
+    if ( ! hv_stores(hash, "ndim", newSVuv(ndim)) )
 
     /* store axises */
     axis_av = newAV();
-    assert( hv_stores(hash, "axises", newRV_noinc((SV *)axis_av)) );
+    if ( ! hv_stores(hash, "axises", newRV_noinc((SV *)axis_av)) )
+      croak("hv_stores ndim failed");
     av_extend(axis_av, ndim-1);
     for (i = 0; i < ndim; ++i) {
       tmp_axis = MH_HIST_AXIS(THIS, i);
@@ -381,14 +382,18 @@ mh_histogram_t::_as_hash()
       av_store(axis_av, i, tmp);
     }
 
-    assert( hv_stores(hash, "nfills", newSVuv(MH_HIST_NFILLS(THIS))) );
-    assert( hv_stores(hash, "total", newSVnv(MH_HIST_TOTAL(THIS))) );
+    if ( ! hv_stores(hash, "nfills", newSVuv(MH_HIST_NFILLS(THIS))) )
+      croak("hv_stores nfills failed");
+    if ( !hv_stores(hash, "total", newSVnv(MH_HIST_TOTAL(THIS))) )
+      croak("hv_stores total failed");
 
     /* store data */
     /* FIXME: strictly speaking, this violates encapsulation */
     nbins_total = THIS->nbins_total;
     data_av = newAV();
-    assert( hv_stores(hash, "data", newRV_noinc((SV *)data_av)) );
+    if ( ! hv_stores(hash, "data", newRV_noinc((SV *)data_av)) )
+      croak("hv_stores data failed");
+
     av_extend(data_av, nbins_total-1);
     data = THIS->data;
     for (i = 0; i < nbins_total; ++i)

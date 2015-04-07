@@ -40,9 +40,12 @@ axis_to_hashref(pTHX_ mh_axis_t *axis)
   hash = newHV();
 
   if (MH_AXIS_ISFIXBIN(axis)) {
-    assert( hv_stores(hash, "nbins", newSVuv(MH_AXIS_NBINS(axis))) );
-    assert( hv_stores(hash, "min", newSVnv(MH_AXIS_MIN(axis))) );
-    assert( hv_stores(hash, "max", newSVnv(MH_AXIS_MAX(axis))) );
+    if ( ! hv_stores(hash, "nbins", newSVuv(MH_AXIS_NBINS(axis))) )
+      croak("hv_stores nbins failed");
+    if ( ! hv_stores(hash, "min", newSVnv(MH_AXIS_MIN(axis))) )
+      croak("hv_stores min failed");
+    if ( ! hv_stores(hash, "max", newSVnv(MH_AXIS_MAX(axis))) )
+      croak("hv_stores max failed");
   }
   else {
     unsigned int i, n;
@@ -50,7 +53,8 @@ axis_to_hashref(pTHX_ mh_axis_t *axis)
     double *bins = axis->bins;
     n = MH_AXIS_NBINS(axis);
     bin_av = newAV();
-    assert( hv_stores(hash, "bins", newRV_noinc((SV *)bin_av)) );
+    if ( ! hv_stores(hash, "bins", newRV_noinc((SV *)bin_av)) )
+      croak("hv_stores bins failed");
     av_extend(bin_av, n);
     for (i = 0; i <= n; ++i)
       av_store(bin_av, i, newSVnv(bins[i]));
