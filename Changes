@@ -1,5 +1,8 @@
 Revision history for Perl extension Math::Histogram.
 
+1.04  Tue Apr 07 09:30:00 2015
+  - Fix invalid use of assert (thank you, Tony!)
+
 1.03  Tue Jun 26 07:30:00 2012
   - Test fixes
 
