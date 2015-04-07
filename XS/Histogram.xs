@@ -370,6 +370,7 @@ mh_histogram_t::_as_hash()
 
     ndim = MH_HIST_NDIM(THIS);
     if ( ! hv_stores(hash, "ndim", newSVuv(ndim)) )
+      croak("hv_stores ndim failed");
 
     /* store axises */
     axis_av = newAV();
